@@ -1,5 +1,34 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>なんとなくブログ</title><link>https://blog.marufeuille.dev/</link><description>Recent content on なんとなくブログ</description><generator>Hugo -- gohugo.io</generator><language>ja</language><copyright>marufeuille</copyright><lastBuildDate>Sun, 26 Jun 2022 06:23:54 +0900</lastBuildDate><atom:link href="https://blog.marufeuille.dev/index.xml" rel="self" type="application/rss+xml"/><item><title>CloudBuild内でビルドするコンテナ内のpoetryからプライベートリポジトリを参照する方法</title><link>https://blog.marufeuille.dev/posts/poetry_private_repository_on_docker_on_cloudbuild/</link><pubDate>Sun, 26 Jun 2022 06:23:54 +0900</pubDate><guid>https://blog.marufeuille.dev/posts/poetry_private_repository_on_docker_on_cloudbuild/</guid><description>はじめに 長いタイトルになってしまいましたが、表題のとおりです笑
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>なんとなくブログ</title>
+    <link>https://blog.marufeuille.dev/</link>
+    <description>Recent content on なんとなくブログ</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>ja</language>
+    <copyright>marufeuille</copyright>
+    <lastBuildDate>Sun, 26 Jun 2022 06:23:54 +0900</lastBuildDate><atom:link href="https://blog.marufeuille.dev/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>CloudBuild内でビルドするコンテナ内のpoetryからプライベートリポジトリを参照する方法</title>
+      <link>https://blog.marufeuille.dev/posts/poetry_private_repository_on_docker_on_cloudbuild/</link>
+      <pubDate>Sun, 26 Jun 2022 06:23:54 +0900</pubDate>
+      
+      <guid>https://blog.marufeuille.dev/posts/poetry_private_repository_on_docker_on_cloudbuild/</guid>
+      <description>はじめに 長いタイトルになってしまいましたが、表題のとおりです笑
 cloudbuild内でプライベートリポジトリを参照する方法も、docker build内でプライベートリポジトリを参照する方法もどちらも色々と記事があったのですが、併せると中々なかったのでメモしておきます
 やったこと 結論 ざっくりいうと、以下のようにすれば動きます。
 ポイントは
-private repositoryの秘密鍵はSecretManager経由で渡す docker buildはBUILDKITを有効化した上で、秘密鍵を&amp;ndash;secretオプションでマウントする Dockerfile内では--mountオプションで秘密鍵を利用する 1steps: 2- name: &amp;#39;gcr.io/cloud-builders/git&amp;#39; 3 secretEnv: [&amp;#39;SSH_KEY&amp;#39;] 4 entrypoint: &amp;#39;bash&amp;#39; 5 args: 6 - -c 7 - |8echo &amp;#34;$$SSH_KEY&amp;#34; &amp;gt;&amp;gt; /root/.ssh/id_rsa 9chmod 400 /root/.ssh/id_rsa 10ssh-keyscan -t rsa github.com &amp;gt; /root/.ssh/known_hosts 11 volumes: 12 - name: &amp;#39;ssh&amp;#39; 13 path: /root/.ssh 14 15- name: gcr.io/cloud-builders/docker:latest 16 dir: k8s_pipelines 17 entrypoint: bash 18 args: 19 - -c 20 - |-21set -eux 22docker build --secret id=ssh,src=https://blog.marufeuille.dev/root/.</description></item><item><title>First Posts</title><link>https://blog.marufeuille.dev/posts/first-posts/</link><pubDate>Sat, 25 Jun 2022 21:17:22 +0900</pubDate><guid>https://blog.marufeuille.dev/posts/first-posts/</guid><description>hi there</description></item></channel></rss>
+ private repositoryの秘密鍵はSecretManager経由で渡す docker buildはBUILDKITを有効化した上で、秘密鍵を&amp;ndash;secretオプションでマウントする Dockerfile内では--mountオプションで秘密鍵を利用する  1steps: 2- name: &amp;#39;gcr.io/cloud-builders/git&amp;#39; 3 secretEnv: [&amp;#39;SSH_KEY&amp;#39;] 4 entrypoint: &amp;#39;bash&amp;#39; 5 args: 6 - -c 7 - |8echo &amp;#34;$$SSH_KEY&amp;#34; &amp;gt;&amp;gt; /root/.ssh/id_rsa 9chmod 400 /root/.ssh/id_rsa 10ssh-keyscan -t rsa github.com &amp;gt; /root/.ssh/known_hosts 11 volumes: 12 - name: &amp;#39;ssh&amp;#39; 13 path: /root/.ssh 14 15- name: gcr.io/cloud-builders/docker:latest 16 dir: k8s_pipelines 17 entrypoint: bash 18 args: 19 - -c 20 - |-21set -eux 22docker build --secret id=ssh,src=https://blog.marufeuille.dev/root/.</description>
+    </item>
+    
+    <item>
+      <title>First Posts</title>
+      <link>https://blog.marufeuille.dev/posts/first-posts/</link>
+      <pubDate>Sat, 25 Jun 2022 21:17:22 +0900</pubDate>
+      
+      <guid>https://blog.marufeuille.dev/posts/first-posts/</guid>
+      <description>hi there</description>
+    </item>
+    
+  </channel>
+</rss>
