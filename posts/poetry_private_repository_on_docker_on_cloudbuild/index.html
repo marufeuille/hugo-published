@@ -268,8 +268,8 @@ cloudbuild内でプライベートリポジトリを参照する方法も、dock
 </code></pre></div><h2 id="cloudbuild内でシークレットを利用してプライベートリポジトリを参照する">CloudBuild内でシークレットを利用してプライベートリポジトリを参照する</h2>
 <p>こちらに関しては公式ドキュメントが参考になるので<a href="https://cloud.google.com/build/docs/access-github-from-build">こちら</a>を確認してください。</p>
 <h2 id="docker-build内のpoetryからプライベートリポジトリを参照できるようにする"><code>docker build</code>内の<code>poetry</code>からプライベートリポジトリを参照できるようにする</h2>
-<p>これはネット上に色々転がっているのですが、よく出てくる<code>--ssh</code>でマウントする方法だと少なくとも私のローカルではうまく行きませんでした。</p>
-<p>そこで、同様にBuildkitのドキュメント内を調べていくと<a href="https://docs.docker.jp/develop/develop-images/build_enhancements.html#new-docker-build-secret-information">こちら</a>にシークレットの私方に関する記載がありましたので、これを利用するようにしました。</p>
+<p>これはネット上に色々転がっているのですが、よく出てくる<code>--ssh</code>でマウントする方法だと私のローカルではうまくいったものの、cloudbuild側ではうまくいきませんでした。</p>
+<p>そこで、同様にBuildkitのドキュメント内を調べていくと<a href="https://docs.docker.jp/develop/develop-images/build_enhancements.html#new-docker-build-secret-information">こちら</a>にシークレットのマウントのやり方に関する記載がありましたので、これを利用するようにしました。</p>
 <p>具体的にはまずcloudbuild側(実行側)で</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1</span>docker build --secret <span style="color:#8be9fd;font-style:italic">id</span><span style="color:#ff79c6">=</span>ssh,src<span style="color:#ff79c6">=</span>/root/.ssh/id_rsa -f Dockerfile -t tag-name:latest .
 </code></pre></div><p>このようにすることで、<code>id=ssh</code>というシークレットにローカルの<code>/root/.ssh/id_rsa/</code>を割り当てています。
