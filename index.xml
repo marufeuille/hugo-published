@@ -7,7 +7,23 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>ja</language>
     <copyright>marufeuille</copyright>
-    <lastBuildDate>Sun, 26 Jun 2022 06:23:54 +0900</lastBuildDate><atom:link href="https://blog.marufeuille.dev/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Mon, 27 Jun 2022 21:51:40 +0900</lastBuildDate><atom:link href="https://blog.marufeuille.dev/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>docker_build_with_ssh</title>
+      <link>https://blog.marufeuille.dev/posts/docker_build_with_ssh/</link>
+      <pubDate>Mon, 27 Jun 2022 21:51:40 +0900</pubDate>
+      
+      <guid>https://blog.marufeuille.dev/posts/docker_build_with_ssh/</guid>
+      <description>結論   先日、cloudbuild上でdocker buildするときに--sshを渡す方法だとうまく動作しないと書いたが、再検証したら普通に行けた
+  おそらく、known_hostsを追加していなかったとかそんな感じだと思われる
+  せっかくなので、いかに検証ログを残す
+  検証ログ まずは純粋にうまく行くローカルバージョンを実行してみます。
+適当なプライベートリポジトリ marufeuille/privare_repository_test を用意しローカル環境で以下を実行すると問題なくクローンできます（公開鍵は設定済みです）
+# git clone git@github.com:marufeuille/privare_repository_test.git Cloning into &#39;privare_repository_test&#39;... remote: Enumerating objects: 3, done. remote: Counting objects: 100% (3/3), done. remote: Total 3 (delta 0), reused 0 (delta 0), pack-reused 0 Receiving objects: 100% (3/3), done. では、このRepositoryを docker build 時にcloneすることを考えます。
+次のようなDockerfileを考えます。
+FROM ubuntu:22.04 RUN apt update &amp;amp;&amp;amp; apt install -y openssh-client git RUN git clone git@github.</description>
+    </item>
+    
     <item>
       <title>CloudBuild内でビルドするコンテナ内のpoetryからプライベートリポジトリを参照する方法</title>
       <link>https://blog.marufeuille.dev/posts/poetry_private_repository_on_docker_on_cloudbuild/</link>

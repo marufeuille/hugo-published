@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <link rel="preload" href="/lib/font-awesome/webfonts/fa-brands-400.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+  <link rel="preload" href="/lib/font-awesome/webfonts/fa-regular-400.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+  <link rel="preload" href="/lib/font-awesome/webfonts/fa-solid-900.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+  <link rel="preload" href="/lib/JetBrainsMono/web/woff2/JetBrainsMono-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+  <script type="text/javascript" src="https://latest.cactus.chat/cactus.js"></script>
+  <link rel="stylesheet" href="https://latest.cactus.chat/style.css" type="text/css">
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title> docker_build_with_ssh | なんとなくブログ</title>
+  <link rel = 'canonical' href = 'https://blog.marufeuille.dev/posts/docker_build_with_ssh/'>
+  <meta name="description" content="たぶんテックブログ的なことを書きます">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="all,follow">
+  <meta name="googlebot" content="index,follow,snippet,archive">
+  <meta property="og:title" content="docker_build_with_ssh" />
+<meta property="og:description" content="結論   先日、cloudbuild上でdocker buildするときに--sshを渡す方法だとうまく動作しないと書いたが、再検証したら普通に行けた
+  おそらく、known_hostsを追加していなかったとかそんな感じだと思われる
+  せっかくなので、いかに検証ログを残す
+  検証ログ まずは純粋にうまく行くローカルバージョンを実行してみます。
+適当なプライベートリポジトリ marufeuille/privare_repository_test を用意しローカル環境で以下を実行すると問題なくクローンできます（公開鍵は設定済みです）
+# git clone git@github.com:marufeuille/privare_repository_test.git Cloning into &#39;privare_repository_test&#39;... remote: Enumerating objects: 3, done. remote: Counting objects: 100% (3/3), done. remote: Total 3 (delta 0), reused 0 (delta 0), pack-reused 0 Receiving objects: 100% (3/3), done. では、このRepositoryを docker build 時にcloneすることを考えます。
+次のようなDockerfileを考えます。
+FROM ubuntu:22.04 RUN apt update &amp;&amp; apt install -y openssh-client git RUN git clone git@github." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://blog.marufeuille.dev/posts/docker_build_with_ssh/" />
+<meta property="article:published_time" content="2022-06-27T21:51:40+09:00" />
+<meta property="article:modified_time" content="2022-06-27T21:51:40+09:00" />
+
+  <meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="docker_build_with_ssh"/>
+<meta name="twitter:description" content="結論   先日、cloudbuild上でdocker buildするときに--sshを渡す方法だとうまく動作しないと書いたが、再検証したら普通に行けた
+  おそらく、known_hostsを追加していなかったとかそんな感じだと思われる
+  せっかくなので、いかに検証ログを残す
+  検証ログ まずは純粋にうまく行くローカルバージョンを実行してみます。
+適当なプライベートリポジトリ marufeuille/privare_repository_test を用意しローカル環境で以下を実行すると問題なくクローンできます（公開鍵は設定済みです）
+# git clone git@github.com:marufeuille/privare_repository_test.git Cloning into &#39;privare_repository_test&#39;... remote: Enumerating objects: 3, done. remote: Counting objects: 100% (3/3), done. remote: Total 3 (delta 0), reused 0 (delta 0), pack-reused 0 Receiving objects: 100% (3/3), done. では、このRepositoryを docker build 時にcloneすることを考えます。
+次のようなDockerfileを考えます。
+FROM ubuntu:22.04 RUN apt update &amp;&amp; apt install -y openssh-client git RUN git clone git@github."/>
+
+  
+  
+    
+  
+  
+  <link rel="stylesheet" href="https://blog.marufeuille.dev/css/styles.94f653e9e151e28067a7c5dbbc4600cbd5a3c721e79faaf971e523c40f3b249b8e4f20bb57810dfffa8d559ca5c140fd56eb4cd9c0853113ad08e66afdb08bdd.css" integrity="sha512-lPZT6eFR4oBnp8XbvEYAy9WjxyHnn6r5ceUjxA87JJuOTyC7V4EN//qNVZylwUD9VutM2cCFMROtCOZq/bCL3Q=="> 
+
+  
+  
+  
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+  
+
+  
+<link rel="icon" type="image/png" href="https://blog.marufeuille.dev/images/favicon.ico" />
+
+  
+  
+  
+  
+</head>
+
+<body class="max-width mx-auto px3 ltr">
+  <div class="content index py4">
+
+  <div id="header-post">
+  <a id="menu-icon" href="#"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;" aria-label="Top of Page"><i class="fas fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+         
+        <li><a href="/">Home</a></li>
+         
+        <li><a href="/posts">Posts</a></li>
+         
+        <li><a href="/tags">Tags</a></li>
+         
+        <li><a href="/about">About</a></li>
+        
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        <li>
+          <a class="icon" href=" https://blog.marufeuille.dev/posts/poetry_private_repository_on_docker_on_cloudbuild/" aria-label="Previous">
+            <i class="fas fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i>
+          </a>
+        </li>
+        
+        
+        <li>
+          <a class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" aria-label="Top of Page">
+            <i class="fas fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i>
+          </a>
+        </li>
+        <li>
+          <a class="icon" href="#" aria-label="Share">
+            <i class="fas fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i>
+          </a>
+        </li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">Previous post</span>
+      <span id="i-next" class="info" style="display:none;">Next post</span>
+      <span id="i-top" class="info" style="display:none;">Back to top</span>
+      <span id="i-share" class="info" style="display:none;">Share post</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      
+      <ul>
+  
+  
+    
+  
+  
+  <li>
+    <a class="icon" href="http://www.facebook.com/sharer.php?u=https%3a%2f%2fblog.marufeuille.dev%2fposts%2fdocker_build_with_ssh%2f" aria-label="Facebook">
+      <i class="fab fa-facebook " aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="https://twitter.com/share?url=https%3a%2f%2fblog.marufeuille.dev%2fposts%2fdocker_build_with_ssh%2f&text=docker_build_with_ssh" aria-label="Twitter">
+      <i class="fab fa-twitter " aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="http://www.linkedin.com/shareArticle?url=https%3a%2f%2fblog.marufeuille.dev%2fposts%2fdocker_build_with_ssh%2f&title=docker_build_with_ssh" aria-label="Linkedin">
+      <i class="fab fa-linkedin " aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=https%3a%2f%2fblog.marufeuille.dev%2fposts%2fdocker_build_with_ssh%2f&is_video=false&description=docker_build_with_ssh" aria-label="Pinterest">
+      <i class="fab fa-pinterest " aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="mailto:?subject=docker_build_with_ssh&body=Check out this article: https%3a%2f%2fblog.marufeuille.dev%2fposts%2fdocker_build_with_ssh%2f" aria-label="Email">
+      <i class="fas fa-envelope " aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="https://getpocket.com/save?url=https%3a%2f%2fblog.marufeuille.dev%2fposts%2fdocker_build_with_ssh%2f&title=docker_build_with_ssh" aria-label="Pocket">
+      <i class="fab fa-get-pocket " aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="http://reddit.com/submit?url=https%3a%2f%2fblog.marufeuille.dev%2fposts%2fdocker_build_with_ssh%2f&title=docker_build_with_ssh" aria-label="reddit">
+      <i class="fab fa-reddit " aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="http://www.tumblr.com/share/link?url=https%3a%2f%2fblog.marufeuille.dev%2fposts%2fdocker_build_with_ssh%2f&name=docker_build_with_ssh&description=%e7%b5%90%e8%ab%96%20%20%20%e5%85%88%e6%97%a5%e3%80%81cloudbuild%e4%b8%8a%e3%81%a7docker%20build%e3%81%99%e3%82%8b%e3%81%a8%e3%81%8d%e3%81%ab--ssh%e3%82%92%e6%b8%a1%e3%81%99%e6%96%b9%e6%b3%95%e3%81%a0%e3%81%a8%e3%81%86%e3%81%be%e3%81%8f%e5%8b%95%e4%bd%9c%e3%81%97%e3%81%aa%e3%81%84%e3%81%a8%e6%9b%b8%e3%81%84%e3%81%9f%e3%81%8c%e3%80%81%e5%86%8d%e6%a4%9c%e8%a8%bc%e3%81%97%e3%81%9f%e3%82%89%e6%99%ae%e9%80%9a%e3%81%ab%e8%a1%8c%e3%81%91%e3%81%9f%0a%20%20%e3%81%8a%e3%81%9d%e3%82%89%e3%81%8f%e3%80%81known_hosts%e3%82%92%e8%bf%bd%e5%8a%a0%e3%81%97%e3%81%a6%e3%81%84%e3%81%aa%e3%81%8b%e3%81%a3%e3%81%9f%e3%81%a8%e3%81%8b%e3%81%9d%e3%82%93%e3%81%aa%e6%84%9f%e3%81%98%e3%81%a0%e3%81%a8%e6%80%9d%e3%82%8f%e3%82%8c%e3%82%8b%0a%20%20%e3%81%9b%e3%81%a3%e3%81%8b%e3%81%8f%e3%81%aa%e3%81%ae%e3%81%a7%e3%80%81%e3%81%84%e3%81%8b%e3%81%ab%e6%a4%9c%e8%a8%bc%e3%83%ad%e3%82%b0%e3%82%92%e6%ae%8b%e3%81%99%0a%20%20%e6%a4%9c%e8%a8%bc%e3%83%ad%e3%82%b0%20%e3%81%be%e3%81%9a%e3%81%af%e7%b4%94%e7%b2%8b%e3%81%ab%e3%81%86%e3%81%be%e3%81%8f%e8%a1%8c%e3%81%8f%e3%83%ad%e3%83%bc%e3%82%ab%e3%83%ab%e3%83%90%e3%83%bc%e3%82%b8%e3%83%a7%e3%83%b3%e3%82%92%e5%ae%9f%e8%a1%8c%e3%81%97%e3%81%a6%e3%81%bf%e3%81%be%e3%81%99%e3%80%82%0a%e9%81%a9%e5%bd%93%e3%81%aa%e3%83%97%e3%83%a9%e3%82%a4%e3%83%99%e3%83%bc%e3%83%88%e3%83%aa%e3%83%9d%e3%82%b8%e3%83%88%e3%83%aa%20marufeuille%2fprivare_repository_test%20%e3%82%92%e7%94%a8%e6%84%8f%e3%81%97%e3%83%ad%e3%83%bc%e3%82%ab%e3%83%ab%e7%92%b0%e5%a2%83%e3%81%a7%e4%bb%a5%e4%b8%8b%e3%82%92%e5%ae%9f%e8%a1%8c%e3%81%99%e3%82%8b%e3%81%a8%e5%95%8f%e9%a1%8c%e3%81%aa%e3%81%8f%e3%82%af%e3%83%ad%e3%83%bc%e3%83%b3%e3%81%a7%e3%81%8d%e3%81%be%e3%81%99%ef%bc%88%e5%85%ac%e9%96%8b%e9%8d%b5%e3%81%af%e8%a8%ad%e5%ae%9a%e6%b8%88%e3%81%bf%e3%81%a7%e3%81%99%ef%bc%89%0a%23%20git%20clone%20git%40github.com%3amarufeuille%2fprivare_repository_test.git%20Cloning%20into%20%27privare_repository_test%27...%20remote%3a%20Enumerating%20objects%3a%203%2c%20done.%20remote%3a%20Counting%20objects%3a%20100%25%20%283%2f3%29%2c%20done.%20remote%3a%20Total%203%20%28delta%200%29%2c%20reused%200%20%28delta%200%29%2c%20pack-reused%200%20Receiving%20objects%3a%20100%25%20%283%2f3%29%2c%20done.%20%e3%81%a7%e3%81%af%e3%80%81%e3%81%93%e3%81%aeRepository%e3%82%92%20docker%20build%20%e6%99%82%e3%81%abclone%e3%81%99%e3%82%8b%e3%81%93%e3%81%a8%e3%82%92%e8%80%83%e3%81%88%e3%81%be%e3%81%99%e3%80%82%0a%e6%ac%a1%e3%81%ae%e3%82%88%e3%81%86%e3%81%aaDockerfile%e3%82%92%e8%80%83%e3%81%88%e3%81%be%e3%81%99%e3%80%82%0aFROM%20ubuntu%3a22.04%20RUN%20apt%20update%20%26amp%3b%26amp%3b%20apt%20install%20-y%20openssh-client%20git%20RUN%20git%20clone%20git%40github." aria-label="Tumblr">
+      <i class="fab fa-tumblr " aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="https://news.ycombinator.com/submitlink?u=https%3a%2f%2fblog.marufeuille.dev%2fposts%2fdocker_build_with_ssh%2f&t=docker_build_with_ssh" aria-label="Hacker News">
+      <i class="fab fa-hacker-news " aria-hidden="true"></i>
+    </a>
+  </li>
+</ul>
+
+    </div>
+    
+    <div id="toc">
+      <nav id="TableOfContents">
+  <ul>
+    <li><a href="#結論">結論</a></li>
+    <li><a href="#検証ログ">検証ログ</a></li>
+    <li><a href="#on-cloudbuild">on cloudbuild</a></li>
+  </ul>
+</nav>
+    </div>
+    
+  </span>
+</div>
+
+
+  <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+    <header>
+      <h1 class="posttitle" itemprop="name headline">
+        docker_build_with_ssh
+      </h1>
+      <div class="meta">
+        
+        <div class="postdate">
+          
+          <time datetime="2022-06-27 21:51:40 &#43;0900 &#43;0900" itemprop="datePublished">2022-06-27</time>
+          
+        </div>
+        
+        
+        <div class="article-read-time">
+          <i class="far fa-clock"></i>
+          
+          4 minute read
+        </div>
+        
+        
+        
+      </div>
+    </header>
+
+  
+    
+    <div class="content" itemprop="articleBody">
+      <h2 id="結論">結論</h2>
+<ul>
+<li>
+<p>先日、cloudbuild上で<code>docker build</code>するときに<code>--ssh</code>を渡す方法だとうまく動作しないと書いたが、再検証したら普通に行けた</p>
+</li>
+<li>
+<p>おそらく、known_hostsを追加していなかったとかそんな感じだと思われる</p>
+</li>
+<li>
+<p>せっかくなので、いかに検証ログを残す</p>
+</li>
+</ul>
+<h2 id="検証ログ">検証ログ</h2>
+<p>まずは純粋にうまく行くローカルバージョンを実行してみます。</p>
+<p>適当なプライベートリポジトリ <code>marufeuille/privare_repository_test</code> を用意しローカル環境で以下を実行すると問題なくクローンできます（公開鍵は設定済みです）</p>
+<pre><code># git clone git@github.com:marufeuille/privare_repository_test.git
+Cloning into 'privare_repository_test'...
+remote: Enumerating objects: 3, done.
+remote: Counting objects: 100% (3/3), done.
+remote: Total 3 (delta 0), reused 0 (delta 0), pack-reused 0
+Receiving objects: 100% (3/3), done.
+</code></pre><p>では、このRepositoryを <code>docker build</code> 時にcloneすることを考えます。</p>
+<p>次のようなDockerfileを考えます。</p>
+<pre><code>FROM ubuntu:22.04
+
+RUN apt update &amp;&amp; apt install -y openssh-client git
+RUN git clone git@github.com:marufeuille/privare_repository_test.git
+</code></pre><p>そしてこれをbuildすると当然落ちます。</p>
+<pre><code># docker build -t test .
+Sending build context to Docker daemon  2.048kB
+Step 1/3 : FROM ubuntu:22.04
+ ---&gt; 27941809078c
+Step 2/3 : RUN apt update &amp;&amp; apt install -y openssh-client git
+ ---&gt; Running in 23982a11b5e4
+
+(中略)
+
+Removing intermediate container 23982a11b5e4
+ ---&gt; 48d7bfc074b6
+Step 3/3 : RUN git clone git@github.com:marufeuille/privare_repository_test.git
+ ---&gt; Running in b056b674da78
+Cloning into 'privare_repository_test'...
+Host key verification failed.
+fatal: Could not read from remote repository.
+
+Please make sure you have the correct access rights
+and the repository exists.
+The command '/bin/sh -c git clone git@github.com:marufeuille/privare_repository_test.git' returned a non-zero code: 128
+</code></pre><p>なので、Dockerfileを次のように書き換え</p>
+<pre><code>FROM ubuntu:22.04
+RUN apt update &amp;&amp; apt install -y openssh-client git
+RUN mkdir -m 700 ~/.ssh &amp;&amp; ssh-keyscan -t rsa github.com &gt; ~/.ssh/known_hosts
+RUN --mount=type=ssh git clone git@github.com:marufeuille/privare_repository_test.git
+</code></pre><p>次にssh-agentをたちあげ、その後適切なオプションを渡すことでコンテナ側に不要な秘密鍵を渡すことなくビルドすることができます。</p>
+<pre><code># eval $(ssh-agent)
+Agent pid 9334
+# ssh-add /home/marufeuille/.ssh/id_rsa
+Identity added: /home/marufeuille/.ssh/id_rsa (marufeuille@penguin)
+# ssh-add -l
+3072 SHA256:yYyoN155dKbZRmZEZm0rDWG/Az9tVi/32DWbxdtJHV8 marufeuille@penguin (RSA)
+# DOCKER_BUILDKIT=1 docker build --ssh default -t test .
+[+] Building 3.3s (6/7)                                                                                                                
+[+] Building 6.8s (8/8) FINISHED                                                                                                       
+ =&gt; [internal] load build definition from Dockerfile                                                                              0.2s
+ =&gt; =&gt; transferring dockerfile: 279B                                                                                              0.0s
+ =&gt; [internal] load .dockerignore                                                                                                 0.3s
+ =&gt; =&gt; transferring context: 2B                                                                                                   0.0s
+ =&gt; [internal] load metadata for docker.io/library/ubuntu:22.04                                                                   0.0s
+ =&gt; [1/4] FROM docker.io/library/ubuntu:22.04                                                                                     0.0s
+ =&gt; CACHED [2/4] RUN apt update &amp;&amp; apt install -y openssh-client git                                                              0.0s
+ =&gt; [3/4] RUN mkdir -m 700 ~/.ssh &amp;&amp; ssh-keyscan -t rsa github.com &gt; ~/.ssh/known_hosts                                           1.5s 
+ =&gt; [4/4] RUN --mount=type=ssh git clone git@github.com:marufeuille/privare_repository_test.git                                   3.3s
+ =&gt; exporting to image                                                                                                            1.5s
+ =&gt; =&gt; exporting layers                                                                                                           1.4s
+ =&gt; =&gt; writing image sha256:0a4b9e970ed98155faac957cd472bee06bdcf6dc8defeae380e98834ee3eb894                                      0.0s
+ =&gt; =&gt; naming to docker.io/library/test   
+</code></pre><p>なんですが、これをそのままcloudbuildに持ち込むと動きませんでした。</p>
+<h2 id="on-cloudbuild">on cloudbuild</h2>
+<p>次に、こんな <code>cloudbuild.yaml</code> を用意します。</p>
+<pre><code>steps:
+- name: 'gcr.io/cloud-builders/git'
+  secretEnv: ['SSH_KEY']
+  entrypoint: 'bash'
+  args:
+  - -c
+  - |
+    echo &quot;$$SSH_KEY&quot; &gt;&gt; /root/.ssh/id_rsa
+    chmod 400 /root/.ssh/id_rsa
+    ssh-keyscan -t rsa github.com &gt;&gt; /root/.ssh/known_hosts
+  volumes:
+  - name: 'ssh'
+    path: /root/.ssh
+
+- name: 'gcr.io/cloud-builders/docker'
+  entrypoint: bash
+  args:
+  - -c
+  - |-
+  - set -eux
+  - eval $(ssh-agent)
+  - ssh-add /root/.ssh/id_rsa
+  - docker build --ssh default -t test .
+  env:
+  - &quot;DOCKER_BUILDKIT=1&quot;
+  volumes:
+  - name: 'ssh'
+    path: /root/.ssh
+
+availableSecrets:
+  secretManager:
+  - versionName: projects/PROJECT_ID/secrets/secret-name/versions/latest
+    env: 'SSH_KEY'
+</code></pre><p>そして <code>gcloud builds submit .</code> をすれば動きますが、シークレットの設定やcloudbuildのSAにシークレットアクセサの付与をしてから実施してください。</p>
+
+    </div>
+  </article>
+
+  
+  
+
+
+
+
+
+
+  <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/posts">Posts</a></li>
+         
+          <li><a href="/tags">Tags</a></li>
+         
+          <li><a href="/about">About</a></li>
+        
+      </ul>
+    </div>
+
+    
+    <div id="toc-footer" style="display: none">
+      <nav id="TableOfContents">
+  <ul>
+    <li><a href="#結論">結論</a></li>
+    <li><a href="#検証ログ">検証ログ</a></li>
+    <li><a href="#on-cloudbuild">on cloudbuild</a></li>
+  </ul>
+</nav>
+    </div>
+    
+
+    <div id="share-footer" style="display: none">
+      
+      <ul>
+  
+  
+    
+  
+  
+  <li>
+    <a class="icon" href="http://www.facebook.com/sharer.php?u=https%3a%2f%2fblog.marufeuille.dev%2fposts%2fdocker_build_with_ssh%2f" aria-label="Facebook">
+      <i class="fab fa-facebook fa-lg" aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="https://twitter.com/share?url=https%3a%2f%2fblog.marufeuille.dev%2fposts%2fdocker_build_with_ssh%2f&text=docker_build_with_ssh" aria-label="Twitter">
+      <i class="fab fa-twitter fa-lg" aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="http://www.linkedin.com/shareArticle?url=https%3a%2f%2fblog.marufeuille.dev%2fposts%2fdocker_build_with_ssh%2f&title=docker_build_with_ssh" aria-label="Linkedin">
+      <i class="fab fa-linkedin fa-lg" aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=https%3a%2f%2fblog.marufeuille.dev%2fposts%2fdocker_build_with_ssh%2f&is_video=false&description=docker_build_with_ssh" aria-label="Pinterest">
+      <i class="fab fa-pinterest fa-lg" aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="mailto:?subject=docker_build_with_ssh&body=Check out this article: https%3a%2f%2fblog.marufeuille.dev%2fposts%2fdocker_build_with_ssh%2f" aria-label="Email">
+      <i class="fas fa-envelope fa-lg" aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="https://getpocket.com/save?url=https%3a%2f%2fblog.marufeuille.dev%2fposts%2fdocker_build_with_ssh%2f&title=docker_build_with_ssh" aria-label="Pocket">
+      <i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="http://reddit.com/submit?url=https%3a%2f%2fblog.marufeuille.dev%2fposts%2fdocker_build_with_ssh%2f&title=docker_build_with_ssh" aria-label="reddit">
+      <i class="fab fa-reddit fa-lg" aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="http://www.tumblr.com/share/link?url=https%3a%2f%2fblog.marufeuille.dev%2fposts%2fdocker_build_with_ssh%2f&name=docker_build_with_ssh&description=%e7%b5%90%e8%ab%96%20%20%20%e5%85%88%e6%97%a5%e3%80%81cloudbuild%e4%b8%8a%e3%81%a7docker%20build%e3%81%99%e3%82%8b%e3%81%a8%e3%81%8d%e3%81%ab--ssh%e3%82%92%e6%b8%a1%e3%81%99%e6%96%b9%e6%b3%95%e3%81%a0%e3%81%a8%e3%81%86%e3%81%be%e3%81%8f%e5%8b%95%e4%bd%9c%e3%81%97%e3%81%aa%e3%81%84%e3%81%a8%e6%9b%b8%e3%81%84%e3%81%9f%e3%81%8c%e3%80%81%e5%86%8d%e6%a4%9c%e8%a8%bc%e3%81%97%e3%81%9f%e3%82%89%e6%99%ae%e9%80%9a%e3%81%ab%e8%a1%8c%e3%81%91%e3%81%9f%0a%20%20%e3%81%8a%e3%81%9d%e3%82%89%e3%81%8f%e3%80%81known_hosts%e3%82%92%e8%bf%bd%e5%8a%a0%e3%81%97%e3%81%a6%e3%81%84%e3%81%aa%e3%81%8b%e3%81%a3%e3%81%9f%e3%81%a8%e3%81%8b%e3%81%9d%e3%82%93%e3%81%aa%e6%84%9f%e3%81%98%e3%81%a0%e3%81%a8%e6%80%9d%e3%82%8f%e3%82%8c%e3%82%8b%0a%20%20%e3%81%9b%e3%81%a3%e3%81%8b%e3%81%8f%e3%81%aa%e3%81%ae%e3%81%a7%e3%80%81%e3%81%84%e3%81%8b%e3%81%ab%e6%a4%9c%e8%a8%bc%e3%83%ad%e3%82%b0%e3%82%92%e6%ae%8b%e3%81%99%0a%20%20%e6%a4%9c%e8%a8%bc%e3%83%ad%e3%82%b0%20%e3%81%be%e3%81%9a%e3%81%af%e7%b4%94%e7%b2%8b%e3%81%ab%e3%81%86%e3%81%be%e3%81%8f%e8%a1%8c%e3%81%8f%e3%83%ad%e3%83%bc%e3%82%ab%e3%83%ab%e3%83%90%e3%83%bc%e3%82%b8%e3%83%a7%e3%83%b3%e3%82%92%e5%ae%9f%e8%a1%8c%e3%81%97%e3%81%a6%e3%81%bf%e3%81%be%e3%81%99%e3%80%82%0a%e9%81%a9%e5%bd%93%e3%81%aa%e3%83%97%e3%83%a9%e3%82%a4%e3%83%99%e3%83%bc%e3%83%88%e3%83%aa%e3%83%9d%e3%82%b8%e3%83%88%e3%83%aa%20marufeuille%2fprivare_repository_test%20%e3%82%92%e7%94%a8%e6%84%8f%e3%81%97%e3%83%ad%e3%83%bc%e3%82%ab%e3%83%ab%e7%92%b0%e5%a2%83%e3%81%a7%e4%bb%a5%e4%b8%8b%e3%82%92%e5%ae%9f%e8%a1%8c%e3%81%99%e3%82%8b%e3%81%a8%e5%95%8f%e9%a1%8c%e3%81%aa%e3%81%8f%e3%82%af%e3%83%ad%e3%83%bc%e3%83%b3%e3%81%a7%e3%81%8d%e3%81%be%e3%81%99%ef%bc%88%e5%85%ac%e9%96%8b%e9%8d%b5%e3%81%af%e8%a8%ad%e5%ae%9a%e6%b8%88%e3%81%bf%e3%81%a7%e3%81%99%ef%bc%89%0a%23%20git%20clone%20git%40github.com%3amarufeuille%2fprivare_repository_test.git%20Cloning%20into%20%27privare_repository_test%27...%20remote%3a%20Enumerating%20objects%3a%203%2c%20done.%20remote%3a%20Counting%20objects%3a%20100%25%20%283%2f3%29%2c%20done.%20remote%3a%20Total%203%20%28delta%200%29%2c%20reused%200%20%28delta%200%29%2c%20pack-reused%200%20Receiving%20objects%3a%20100%25%20%283%2f3%29%2c%20done.%20%e3%81%a7%e3%81%af%e3%80%81%e3%81%93%e3%81%aeRepository%e3%82%92%20docker%20build%20%e6%99%82%e3%81%abclone%e3%81%99%e3%82%8b%e3%81%93%e3%81%a8%e3%82%92%e8%80%83%e3%81%88%e3%81%be%e3%81%99%e3%80%82%0a%e6%ac%a1%e3%81%ae%e3%82%88%e3%81%86%e3%81%aaDockerfile%e3%82%92%e8%80%83%e3%81%88%e3%81%be%e3%81%99%e3%80%82%0aFROM%20ubuntu%3a22.04%20RUN%20apt%20update%20%26amp%3b%26amp%3b%20apt%20install%20-y%20openssh-client%20git%20RUN%20git%20clone%20git%40github." aria-label="Tumblr">
+      <i class="fab fa-tumblr fa-lg" aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="https://news.ycombinator.com/submitlink?u=https%3a%2f%2fblog.marufeuille.dev%2fposts%2fdocker_build_with_ssh%2f&t=docker_build_with_ssh" aria-label="Hacker News">
+      <i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i>
+    </a>
+  </li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+      
+        <a id="menu-toggle" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;" aria-label="Menu">
+          <i class="fas fa-bars fa-lg" aria-hidden="true"></i> Menu</a>
+        
+        <a id="toc-toggle" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;" aria-label="TOC">
+          <i class="fas fa-list fa-lg" aria-hidden="true"></i> TOC</a>
+        
+        <a id="share-toggle" class="icon" href="#" onclick="$('#share-footer').toggle();return false;" aria-label="Share">
+          <i class="fas fa-share-alt fa-lg" aria-hidden="true"></i> share</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" aria-label="Top of Page">
+          <i class="fas fa-chevron-up fa-lg" aria-hidden="true"></i> Top</a>
+    </div>
+
+  </div>
+</div>
+
+
+  <footer id="footer">
+  <div class="footer-left">
+    Copyright  &copy; 2022  marufeuille 
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+         
+        <li><a href="/">Home</a></li>
+         
+        <li><a href="/posts">Posts</a></li>
+         
+        <li><a href="/tags">Tags</a></li>
+         
+        <li><a href="/about">About</a></li>
+        
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+
+  </div>
+</body>
+
+<link rel="stylesheet" href=/lib/font-awesome/css/all.min.css>
+<script src=/lib/jquery/jquery.min.js></script>
+<script src=/js/main.js></script>
+
+<script src=/js/code-copy.js></script>
+
+
+
+
+</html>
