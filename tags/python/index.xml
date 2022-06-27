@@ -14,7 +14,8 @@
       <pubDate>Sun, 26 Jun 2022 06:23:54 +0900</pubDate>
       
       <guid>https://blog.marufeuille.dev/posts/poetry_private_repository_on_docker_on_cloudbuild/</guid>
-      <description>はじめに 長いタイトルになってしまいましたが、表題のとおりです笑
+      <description>注意事項 その後の検証で --ssh オプションでも同等に動作することの検証が取れたのでこちらを参照してください。
+はじめに 長いタイトルになってしまいましたが、表題のとおりです笑
 cloudbuild内でプライベートリポジトリを参照する方法も、docker build内でプライベートリポジトリを参照する方法もどちらも色々と記事があったのですが、併せると中々なかったのでメモしておきます
 やったこと 結論 ざっくりいうと、以下のようにすれば動きます。
 ポイントは

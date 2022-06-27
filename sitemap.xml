@@ -3,6 +3,16 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
+    <loc>https://blog.marufeuille.dev/tags/cloudbuild/</loc>
+    <lastmod>2022-06-27T21:51:40+09:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://blog.marufeuille.dev/tags/docker/</loc>
+    <lastmod>2022-06-27T21:51:40+09:00</lastmod>
+  </url>
+  
+  <url>
     <loc>https://blog.marufeuille.dev/posts/docker_build_with_ssh/</loc>
     <lastmod>2022-06-27T21:51:40+09:00</lastmod>
   </url>
@@ -13,13 +23,13 @@
   </url>
   
   <url>
-    <loc>https://blog.marufeuille.dev/</loc>
+    <loc>https://blog.marufeuille.dev/tags/</loc>
     <lastmod>2022-06-27T21:51:40+09:00</lastmod>
   </url>
   
   <url>
-    <loc>https://blog.marufeuille.dev/tags/cloudbuild/</loc>
-    <lastmod>2022-06-26T06:23:54+09:00</lastmod>
+    <loc>https://blog.marufeuille.dev/</loc>
+    <lastmod>2022-06-27T21:51:40+09:00</lastmod>
   </url>
   
   <url>
@@ -28,17 +38,7 @@
   </url>
   
   <url>
-    <loc>https://blog.marufeuille.dev/tags/docker/</loc>
-    <lastmod>2022-06-26T06:23:54+09:00</lastmod>
-  </url>
-  
-  <url>
     <loc>https://blog.marufeuille.dev/tags/python/</loc>
-    <lastmod>2022-06-26T06:23:54+09:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>https://blog.marufeuille.dev/tags/</loc>
     <lastmod>2022-06-26T06:23:54+09:00</lastmod>
   </url>
   
