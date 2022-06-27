@@ -9,17 +9,18 @@
     <copyright>marufeuille</copyright>
     <lastBuildDate>Mon, 27 Jun 2022 21:51:40 +0900</lastBuildDate><atom:link href="https://blog.marufeuille.dev/posts/index.xml" rel="self" type="application/rss+xml" />
     <item>
-      <title>docker_build_with_ssh</title>
+      <title>CloudBuild内でビルドするコンテナ内からプライベートリポジトリを参照する方法</title>
       <link>https://blog.marufeuille.dev/posts/docker_build_with_ssh/</link>
       <pubDate>Mon, 27 Jun 2022 21:51:40 +0900</pubDate>
       
       <guid>https://blog.marufeuille.dev/posts/docker_build_with_ssh/</guid>
-      <description>結論  先日、cloudbuild上でdocker buildするときに--sshを渡す方法だとうまく動作しないと書きましたが、再検証したら動いたのでメモします。 おそらく、known_hostsを追加していなかったとかそんな感じだと思われます・・・ださい。  ｰ 追検証の体なので、そういう形式で書いていますので、結論だけ知りたい方は最下部に行ってください。
-検証ログ on Local 適当なプライベートリポジトリ marufeuille/privare_repository_test を用意しローカル環境で以下を実行すると問題なくクローンできます（公開鍵は設定済みです）
+      <description>結論   先日、cloudbuild上でdocker buildするときに--sshを渡す方法だとうまく動作しないと書きましたが、再検証したら動いたのでメモします。
+  おそらく、known_hostsを追加していなかったとかそんな感じだと思われます・・・ださい。
+  追検証の体なので、そういう形式で書いていますので、結論だけ知りたい方は最下部に行ってください。
+  検証ログ on Local 適当なプライベートリポジトリ marufeuille/privare_repository_test を用意しローカル環境で以下を実行すると問題なくクローンできます（公開鍵は設定済みです）
 # git clone git@github.com:marufeuille/privare_repository_test.git Cloning into &#39;privare_repository_test&#39;... remote: Enumerating objects: 3, done. remote: Counting objects: 100% (3/3), done. remote: Total 3 (delta 0), reused 0 (delta 0), pack-reused 0 Receiving objects: 100% (3/3), done. では、このRepositoryを docker build 時にcloneすることを考えます。
 次のようなDockerfileを考えます。
-FROM ubuntu:22.04 RUN apt update &amp;amp;&amp;amp; apt install -y openssh-client git RUN git clone git@github.com:marufeuille/privare_repository_test.git そしてこれをbuildすると当然落ちます。
-# docker build -t test .</description>
+FROM ubuntu:22.04 RUN apt update &amp;amp;&amp;amp; apt install -y openssh-client git RUN git clone git@github.</description>
     </item>
     
     <item>
