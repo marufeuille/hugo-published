@@ -18,13 +18,13 @@
 なお、自分が思っている使い方的な側面もあるので必ずしもこの書き方でなくて良いし、もっと良い書き方があるかもしれない。
 気づいたときに追記していきます。
 使い方色々 Mockオブジェクトを作成する Pythonなので、適当なオブジェクトを作ってMockとして呼び出すということも可能だが、管理が面倒なので基本はMagicMockして作れば良い。
-mocked = MagicMock(spec=...) 属性値のMockをする PropertyMockを使えば良い
-from unittest.mock import PropertyMock from google.cloud import storage def test_hoge(): mocked_blob = MagicMock(spec=storage.Blob) suze = PropertyMock(return_value=10) type(mocked_blob).size = size mockに対してではなく、mockのtypeに対して設定するのがミソである。
+1mocked = MagicMock(spec=...) 属性値のMockをする PropertyMockを使えば良い
+1from unittest.mock import PropertyMock 2 3from google.cloud import storage 4 5def test_hoge(): 6 mocked_blob = MagicMock(spec=storage.Blob) 7 suze = PropertyMock(return_value=10) 8 type(mocked_blob).size = size mockに対してではなく、mockのtypeに対して設定するのがミソである。
 インポートされたパッケージ内の特定のクラスをモックしたい モックをするときはpatchを使って基本的に以下のような形でできる
 1from unittest.mock import patch 2 3... 4 5def test_hoge(): 6 ... 7 with patch(..., autospec=True) as mocked: 8 ... 9 このpatchに何を指定するかがちょっと悩みがちだが、その名前空間におけるオブジェクトを上書きするみたいな気持ちでやると良い。
 例えば、hoge/fuga/main.pyで定義されるモジュールがあったときに、以下のようにしてimport 文が書かれていたとする
-from google.cloud import storage これの storage.Client をモックしたいとしたときは
-1from unittest.mock import patch 2 3... 4 5def test_hoge(): 6 .</description>
+1from google.cloud import storage これの storage.Client をモックしたいとしたときは
+1from unittest.</description>
     </item>
     
     <item>
