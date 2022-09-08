@@ -196,7 +196,7 @@ CREATE USER &#39;fivetran&#39;@&#39;%&#39; IDENTIFIED BY &#39;ぱすわーど&#3
         <div class="article-read-time">
           <i class="far fa-clock"></i>
           
-          3 minute read
+          4 minute read
         </div>
         
         
@@ -298,7 +298,9 @@ GRANT SELECT, REPLICATION CLIENT, REPLICATION SLAVE ON *.* TO 'fivetran'@'%'
 <li>BigQuery用のサービスアカウントの紐付け</li>
 </ol>
 <p>今回はfivetranが提供してくれるSAを自GCPプロジェクトのIAMに紐付けました。
-BigQueryユーザをつければOKです。</p>
+WebUIの左側にあるDestinationsから以下の様に確認が可能です。</p>
+<p><img src="/images/bigquery.png" alt="bigquery"></p>
+<p>BigQueryユーザをつければOKです。</p>
 <ol start="2">
 <li>CloudSQLの証明書の確認</li>
 </ol>
