@@ -7,7 +7,19 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>ja</language>
     <copyright>marufeuille</copyright>
-    <lastBuildDate>Sun, 10 Jul 2022 22:29:17 +0000</lastBuildDate><atom:link href="https://blog.marufeuille.dev/posts/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Thu, 08 Sep 2022 21:00:00 +0900</lastBuildDate><atom:link href="https://blog.marufeuille.dev/posts/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>FivetranをTerraformで構成する方法</title>
+      <link>https://blog.marufeuille.dev/posts/fivetran_with_terraform/</link>
+      <pubDate>Thu, 08 Sep 2022 21:00:00 +0900</pubDate>
+      
+      <guid>https://blog.marufeuille.dev/posts/fivetran_with_terraform/</guid>
+      <description>はじめに ELツールであるFivetranを試す機会があり、terraformも使えるということでどこまで使えるのか試してみました
+構成 データの転送は CloudSQL(GCP) -&amp;gt; Fivetran -&amp;gt; BigQuery という経路で行うことにしました。
+CloudSQLの準備 CloudSQLはコンソール上から適当に作成しています。 その上でデータは面倒だったのでこの手順で用意し、その上で以下のようにしてユーザを作成します。
+CREATE USER &#39;fivetran&#39;@&#39;%&#39; IDENTIFIED BY &#39;ぱすわーど&#39; GRANT SELECT, REPLICATION CLIENT, REPLICATION SLAVE ON *.* TO &#39;fivetran&#39;@&#39;%&#39; Terraform  provider.tf  api_key, api_secretはWebUI上から発行しておいてください    terraform { required_providers { fivetran = { source = &amp;quot;fivetran/fivetran&amp;quot; version = &amp;quot;0.6.3&amp;quot; } } } provider &amp;quot;fivetran&amp;quot; { api_key = &amp;quot;APIKEY&amp;quot; api_secret = &amp;quot;APISECRET&amp;quot; }  main.tf  1resource &amp;#34;fivetran_group&amp;#34; &amp;#34;group&amp;#34; { 2 name = &amp;#34;Terraform&amp;#34; 3} 45resource &amp;#34;fivetran_connector&amp;#34; &amp;#34;mysql&amp;#34; { 6 group_id = fivetran_group.</description>
+    </item>
+    
     <item>
       <title>Pytest</title>
       <link>https://blog.marufeuille.dev/posts/pytest/</link>
