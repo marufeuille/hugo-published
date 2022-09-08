@@ -17,7 +17,7 @@
       <description>はじめに ELツールであるFivetranを試す機会があり、terraformも使えるということでどこまで使えるのか試してみました
 構成 データの転送は CloudSQL(GCP) -&amp;gt; Fivetran -&amp;gt; BigQuery という経路で行うことにしました。
 CloudSQLの準備 CloudSQLはコンソール上から適当に作成しています。 その上でデータは面倒だったのでこの手順で用意し、その上で以下のようにしてユーザを作成します。
-CREATE USER &#39;fivetran&#39;@&#39;%&#39; IDENTIFIED BY &#39;ぱすわーど&#39; GRANT SELECT, REPLICATION CLIENT, REPLICATION SLAVE ON *.* TO &#39;fivetran&#39;@&#39;%&#39; Terraform  provider.tf  api_key, api_secretはWebUI上から発行しておいてください    terraform { required_providers { fivetran = { source = &amp;quot;fivetran/fivetran&amp;quot; version = &amp;quot;0.6.3&amp;quot; } } } provider &amp;quot;fivetran&amp;quot; { api_key = &amp;quot;APIKEY&amp;quot; api_secret = &amp;quot;APISECRET&amp;quot; }  main.tf  1resource &amp;#34;fivetran_group&amp;#34; &amp;#34;group&amp;#34; { 2 name = &amp;#34;Terraform&amp;#34; 3} 45resource &amp;#34;fivetran_connector&amp;#34; &amp;#34;mysql&amp;#34; { 6 group_id = fivetran_group.</description>
+CREATE USER &#39;fivetran&#39;@&#39;%&#39; IDENTIFIED BY &#39;ぱすわーど&#39; GRANT SELECT, REPLICATION CLIENT, REPLICATION SLAVE ON *.* TO &#39;fivetran&#39;@&#39;%&#39; Terraform  provider.tf  api_key, api_secretはWebUI上から発行しておいてください    1terraform { 2 required_providers { 3 fivetran = { 4 source = &amp;#34;fivetran/fivetran&amp;#34; 5 version = &amp;#34;0.6.3&amp;#34; 6 } 7 } 8} 91011provider &amp;#34;fivetran&amp;#34; { 12 api_key = &amp;#34;APIKEY&amp;#34; 13 api_secret = &amp;#34;APISECRET&amp;#34; 14}  main.</description>
     </item>
     
     <item>
