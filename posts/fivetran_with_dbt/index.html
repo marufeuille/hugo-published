@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <link rel="preload" href="/lib/font-awesome/webfonts/fa-brands-400.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+  <link rel="preload" href="/lib/font-awesome/webfonts/fa-regular-400.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+  <link rel="preload" href="/lib/font-awesome/webfonts/fa-solid-900.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+  <link rel="preload" href="/lib/JetBrainsMono/web/woff2/JetBrainsMono-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+  <script type="text/javascript" src="https://latest.cactus.chat/cactus.js"></script>
+  <link rel="stylesheet" href="https://latest.cactus.chat/style.css" type="text/css">
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title> Fivetran を触ってみて思ったことたち | なんとなくブログ</title>
+  <link rel = 'canonical' href = 'https://blog.marufeuille.dev/posts/fivetran_with_dbt/'>
+  <meta name="description" content="たぶんテックブログ的なことを書きます">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="all,follow">
+  <meta name="googlebot" content="index,follow,snippet,archive">
+  <meta property="og:title" content="Fivetran を触ってみて思ったことたち" />
+<meta property="og:description" content="はじめに 前回に引き続きELツールであるFivetranを試しており、ちょいちょい触って気づいたことを書き留めておきます
+所感 通知 エラー時の通知などは見た限りはメールのみに対応しています。Slack等には直接は送れなさそうです。この点はUIからだけの操作を考えるとツライかも。
+今どきメールで拾いたいっていうニーズのほうが少なそうだが、逆にライトに使う層だとそれでも良い気がするので、そういうことなのだろうか。
+ログの転送 fivetran自体のログはWebUIから確認も可能ですが、Datadog, GCP Cloudloggingのような一般的なログ管理ソリューションに転送可能です。
+先程の通知のところでメールのみと書きましたが、他のログ管理ソリューションに転送できればあとは大体やりたい放題ですね！
+dbt連携 まだベータですが個人的には結構良い感触を持ちました。
+特にどちらも比較的価格は安いソリューションでありつつ、インフラを意識しないので最少人数で分析基盤を作っていくみたいなところでは結構良さそうです。
+今回はオープンデータから稲作に関するデータと天気情報を持ってきてゴニョろうとする、みたいなデモを作ってみました。
+生データをlakeにいれ、少し加工したものをwarehouse、分析に使う段をmartとわけてます。
+fivetran内の転送タスクに合わせて実行ができてワークフローが一定不要 上流のコネクタの実行に合わせて勝手に後続のdbtのタスクを流すことができます。 つまり、凝ったことをしなければワークフローの管理が不要ということですね。楽や・・・
+もちろん、必要に応じてスケジュールの設定もできます。
+リネージュがソースからdbt内まで追える こんな感じでソースからmartまでいい感じに可視化できました。
+ineが稲作データですが、面倒になったのでwarehouse部分はすっ飛ばしてるのはご愛嬌。
+fivetran内で全体のリネージュが出てくるので良いですね。
+dbtのログもちゃんと拾える (転送設定の上で)cloudlogging上で確認したのですが、例えば成功時のログは以下のようにjsonで構造化されてcloudlogginから確認できます。
+ちゃんと構造化されているので、サクッとメトリックを作ったり通知するのもやりやすそうに見えます。
+{ &quot;insertId&quot;: &quot;9g7n20g1atrvd6&quot;, &quot;jsonPayload&quot;: { &quot;event&quot;: &quot;dbt_run_succeeded&quot;, &quot;created&quot;: &quot;2022-09-10T07:14:44.435Z&quot;, &quot;data&quot;: { &quot;startTime&quot;: &quot;2022-09-10T07:14:17.900Z&quot;, &quot;result&quot;: { &quot;stepResults&quot;: [ { &quot;step&quot;: { &quot;processBuilderCommand&quot;: [ &quot;dbt&quot;, &quot;test&quot;, &quot;--models&quot;, &quot;&#43;sunshine_time&quot;, &quot;&#43;temperature&quot; ], &quot;name&quot;: &quot;Scheduled: Test&quot; }, &quot;failedModelRuns&quot;: 0, &quot;successfulModelRuns&quot;: 0, &quot;success&quot;: true, &quot;commandResult&quot;: { &quot;error&quot;: &quot;&quot;, &quot;exitCode&quot;: 0, &quot;output&quot;: &quot;07:14:39 Running with dbt=1." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://blog.marufeuille.dev/posts/fivetran_with_dbt/" />
+<meta property="article:published_time" content="2022-09-10T21:00:00+09:00" />
+<meta property="article:modified_time" content="2022-09-10T21:00:00+09:00" />
+
+  <meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Fivetran を触ってみて思ったことたち"/>
+<meta name="twitter:description" content="はじめに 前回に引き続きELツールであるFivetranを試しており、ちょいちょい触って気づいたことを書き留めておきます
+所感 通知 エラー時の通知などは見た限りはメールのみに対応しています。Slack等には直接は送れなさそうです。この点はUIからだけの操作を考えるとツライかも。
+今どきメールで拾いたいっていうニーズのほうが少なそうだが、逆にライトに使う層だとそれでも良い気がするので、そういうことなのだろうか。
+ログの転送 fivetran自体のログはWebUIから確認も可能ですが、Datadog, GCP Cloudloggingのような一般的なログ管理ソリューションに転送可能です。
+先程の通知のところでメールのみと書きましたが、他のログ管理ソリューションに転送できればあとは大体やりたい放題ですね！
+dbt連携 まだベータですが個人的には結構良い感触を持ちました。
+特にどちらも比較的価格は安いソリューションでありつつ、インフラを意識しないので最少人数で分析基盤を作っていくみたいなところでは結構良さそうです。
+今回はオープンデータから稲作に関するデータと天気情報を持ってきてゴニョろうとする、みたいなデモを作ってみました。
+生データをlakeにいれ、少し加工したものをwarehouse、分析に使う段をmartとわけてます。
+fivetran内の転送タスクに合わせて実行ができてワークフローが一定不要 上流のコネクタの実行に合わせて勝手に後続のdbtのタスクを流すことができます。 つまり、凝ったことをしなければワークフローの管理が不要ということですね。楽や・・・
+もちろん、必要に応じてスケジュールの設定もできます。
+リネージュがソースからdbt内まで追える こんな感じでソースからmartまでいい感じに可視化できました。
+ineが稲作データですが、面倒になったのでwarehouse部分はすっ飛ばしてるのはご愛嬌。
+fivetran内で全体のリネージュが出てくるので良いですね。
+dbtのログもちゃんと拾える (転送設定の上で)cloudlogging上で確認したのですが、例えば成功時のログは以下のようにjsonで構造化されてcloudlogginから確認できます。
+ちゃんと構造化されているので、サクッとメトリックを作ったり通知するのもやりやすそうに見えます。
+{ &quot;insertId&quot;: &quot;9g7n20g1atrvd6&quot;, &quot;jsonPayload&quot;: { &quot;event&quot;: &quot;dbt_run_succeeded&quot;, &quot;created&quot;: &quot;2022-09-10T07:14:44.435Z&quot;, &quot;data&quot;: { &quot;startTime&quot;: &quot;2022-09-10T07:14:17.900Z&quot;, &quot;result&quot;: { &quot;stepResults&quot;: [ { &quot;step&quot;: { &quot;processBuilderCommand&quot;: [ &quot;dbt&quot;, &quot;test&quot;, &quot;--models&quot;, &quot;&#43;sunshine_time&quot;, &quot;&#43;temperature&quot; ], &quot;name&quot;: &quot;Scheduled: Test&quot; }, &quot;failedModelRuns&quot;: 0, &quot;successfulModelRuns&quot;: 0, &quot;success&quot;: true, &quot;commandResult&quot;: { &quot;error&quot;: &quot;&quot;, &quot;exitCode&quot;: 0, &quot;output&quot;: &quot;07:14:39 Running with dbt=1."/>
+
+  
+  
+    
+  
+  
+  <link rel="stylesheet" href="https://blog.marufeuille.dev/css/styles.94f653e9e151e28067a7c5dbbc4600cbd5a3c721e79faaf971e523c40f3b249b8e4f20bb57810dfffa8d559ca5c140fd56eb4cd9c0853113ad08e66afdb08bdd.css" integrity="sha512-lPZT6eFR4oBnp8XbvEYAy9WjxyHnn6r5ceUjxA87JJuOTyC7V4EN//qNVZylwUD9VutM2cCFMROtCOZq/bCL3Q=="> 
+
+  
+  
+  
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+  
+
+  
+<link rel="icon" type="image/png" href="https://blog.marufeuille.dev/images/favicon.ico" />
+
+  
+  
+  
+  
+</head>
+
+<body class="max-width mx-auto px3 ltr">
+  <div class="content index py4">
+
+  <div id="header-post">
+  <a id="menu-icon" href="#"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;" aria-label="Top of Page"><i class="fas fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+         
+        <li><a href="/">Home</a></li>
+         
+        <li><a href="/posts">Posts</a></li>
+         
+        <li><a href="/tags">Tags</a></li>
+         
+        <li><a href="/about">About</a></li>
+        
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        <li>
+          <a class="icon" href=" https://blog.marufeuille.dev/posts/fivetran_with_terraform/" aria-label="Previous">
+            <i class="fas fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i>
+          </a>
+        </li>
+        
+        
+        <li>
+          <a class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" aria-label="Top of Page">
+            <i class="fas fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i>
+          </a>
+        </li>
+        <li>
+          <a class="icon" href="#" aria-label="Share">
+            <i class="fas fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i>
+          </a>
+        </li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">Previous post</span>
+      <span id="i-next" class="info" style="display:none;">Next post</span>
+      <span id="i-top" class="info" style="display:none;">Back to top</span>
+      <span id="i-share" class="info" style="display:none;">Share post</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      
+      <ul>
+  
+  
+    
+  
+  
+  <li>
+    <a class="icon" href="http://www.facebook.com/sharer.php?u=https%3a%2f%2fblog.marufeuille.dev%2fposts%2ffivetran_with_dbt%2f" aria-label="Facebook">
+      <i class="fab fa-facebook " aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="https://twitter.com/share?url=https%3a%2f%2fblog.marufeuille.dev%2fposts%2ffivetran_with_dbt%2f&text=Fivetran%20%e3%82%92%e8%a7%a6%e3%81%a3%e3%81%a6%e3%81%bf%e3%81%a6%e6%80%9d%e3%81%a3%e3%81%9f%e3%81%93%e3%81%a8%e3%81%9f%e3%81%a1" aria-label="Twitter">
+      <i class="fab fa-twitter " aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="http://www.linkedin.com/shareArticle?url=https%3a%2f%2fblog.marufeuille.dev%2fposts%2ffivetran_with_dbt%2f&title=Fivetran%20%e3%82%92%e8%a7%a6%e3%81%a3%e3%81%a6%e3%81%bf%e3%81%a6%e6%80%9d%e3%81%a3%e3%81%9f%e3%81%93%e3%81%a8%e3%81%9f%e3%81%a1" aria-label="Linkedin">
+      <i class="fab fa-linkedin " aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=https%3a%2f%2fblog.marufeuille.dev%2fposts%2ffivetran_with_dbt%2f&is_video=false&description=Fivetran%20%e3%82%92%e8%a7%a6%e3%81%a3%e3%81%a6%e3%81%bf%e3%81%a6%e6%80%9d%e3%81%a3%e3%81%9f%e3%81%93%e3%81%a8%e3%81%9f%e3%81%a1" aria-label="Pinterest">
+      <i class="fab fa-pinterest " aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="mailto:?subject=Fivetran%20%e3%82%92%e8%a7%a6%e3%81%a3%e3%81%a6%e3%81%bf%e3%81%a6%e6%80%9d%e3%81%a3%e3%81%9f%e3%81%93%e3%81%a8%e3%81%9f%e3%81%a1&body=Check out this article: https%3a%2f%2fblog.marufeuille.dev%2fposts%2ffivetran_with_dbt%2f" aria-label="Email">
+      <i class="fas fa-envelope " aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="https://getpocket.com/save?url=https%3a%2f%2fblog.marufeuille.dev%2fposts%2ffivetran_with_dbt%2f&title=Fivetran%20%e3%82%92%e8%a7%a6%e3%81%a3%e3%81%a6%e3%81%bf%e3%81%a6%e6%80%9d%e3%81%a3%e3%81%9f%e3%81%93%e3%81%a8%e3%81%9f%e3%81%a1" aria-label="Pocket">
+      <i class="fab fa-get-pocket " aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="http://reddit.com/submit?url=https%3a%2f%2fblog.marufeuille.dev%2fposts%2ffivetran_with_dbt%2f&title=Fivetran%20%e3%82%92%e8%a7%a6%e3%81%a3%e3%81%a6%e3%81%bf%e3%81%a6%e6%80%9d%e3%81%a3%e3%81%9f%e3%81%93%e3%81%a8%e3%81%9f%e3%81%a1" aria-label="reddit">
+      <i class="fab fa-reddit " aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="http://www.tumblr.com/share/link?url=https%3a%2f%2fblog.marufeuille.dev%2fposts%2ffivetran_with_dbt%2f&name=Fivetran%20%e3%82%92%e8%a7%a6%e3%81%a3%e3%81%a6%e3%81%bf%e3%81%a6%e6%80%9d%e3%81%a3%e3%81%9f%e3%81%93%e3%81%a8%e3%81%9f%e3%81%a1&description=%e3%81%af%e3%81%98%e3%82%81%e3%81%ab%20%e5%89%8d%e5%9b%9e%e3%81%ab%e5%bc%95%e3%81%8d%e7%b6%9a%e3%81%8dEL%e3%83%84%e3%83%bc%e3%83%ab%e3%81%a7%e3%81%82%e3%82%8bFivetran%e3%82%92%e8%a9%a6%e3%81%97%e3%81%a6%e3%81%8a%e3%82%8a%e3%80%81%e3%81%a1%e3%82%87%e3%81%84%e3%81%a1%e3%82%87%e3%81%84%e8%a7%a6%e3%81%a3%e3%81%a6%e6%b0%97%e3%81%a5%e3%81%84%e3%81%9f%e3%81%93%e3%81%a8%e3%82%92%e6%9b%b8%e3%81%8d%e7%95%99%e3%82%81%e3%81%a6%e3%81%8a%e3%81%8d%e3%81%be%e3%81%99%0a%e6%89%80%e6%84%9f%20%e9%80%9a%e7%9f%a5%20%e3%82%a8%e3%83%a9%e3%83%bc%e6%99%82%e3%81%ae%e9%80%9a%e7%9f%a5%e3%81%aa%e3%81%a9%e3%81%af%e8%a6%8b%e3%81%9f%e9%99%90%e3%82%8a%e3%81%af%e3%83%a1%e3%83%bc%e3%83%ab%e3%81%ae%e3%81%bf%e3%81%ab%e5%af%be%e5%bf%9c%e3%81%97%e3%81%a6%e3%81%84%e3%81%be%e3%81%99%e3%80%82Slack%e7%ad%89%e3%81%ab%e3%81%af%e7%9b%b4%e6%8e%a5%e3%81%af%e9%80%81%e3%82%8c%e3%81%aa%e3%81%95%e3%81%9d%e3%81%86%e3%81%a7%e3%81%99%e3%80%82%e3%81%93%e3%81%ae%e7%82%b9%e3%81%afUI%e3%81%8b%e3%82%89%e3%81%a0%e3%81%91%e3%81%ae%e6%93%8d%e4%bd%9c%e3%82%92%e8%80%83%e3%81%88%e3%82%8b%e3%81%a8%e3%83%84%e3%83%a9%e3%82%a4%e3%81%8b%e3%82%82%e3%80%82%0a%e4%bb%8a%e3%81%a9%e3%81%8d%e3%83%a1%e3%83%bc%e3%83%ab%e3%81%a7%e6%8b%be%e3%81%84%e3%81%9f%e3%81%84%e3%81%a3%e3%81%a6%e3%81%84%e3%81%86%e3%83%8b%e3%83%bc%e3%82%ba%e3%81%ae%e3%81%bb%e3%81%86%e3%81%8c%e5%b0%91%e3%81%aa%e3%81%9d%e3%81%86%e3%81%a0%e3%81%8c%e3%80%81%e9%80%86%e3%81%ab%e3%83%a9%e3%82%a4%e3%83%88%e3%81%ab%e4%bd%bf%e3%81%86%e5%b1%a4%e3%81%a0%e3%81%a8%e3%81%9d%e3%82%8c%e3%81%a7%e3%82%82%e8%89%af%e3%81%84%e6%b0%97%e3%81%8c%e3%81%99%e3%82%8b%e3%81%ae%e3%81%a7%e3%80%81%e3%81%9d%e3%81%86%e3%81%84%e3%81%86%e3%81%93%e3%81%a8%e3%81%aa%e3%81%ae%e3%81%a0%e3%82%8d%e3%81%86%e3%81%8b%e3%80%82%0a%e3%83%ad%e3%82%b0%e3%81%ae%e8%bb%a2%e9%80%81%20fivetran%e8%87%aa%e4%bd%93%e3%81%ae%e3%83%ad%e3%82%b0%e3%81%afWebUI%e3%81%8b%e3%82%89%e7%a2%ba%e8%aa%8d%e3%82%82%e5%8f%af%e8%83%bd%e3%81%a7%e3%81%99%e3%81%8c%e3%80%81Datadog%2c%20GCP%20Cloudlogging%e3%81%ae%e3%82%88%e3%81%86%e3%81%aa%e4%b8%80%e8%88%ac%e7%9a%84%e3%81%aa%e3%83%ad%e3%82%b0%e7%ae%a1%e7%90%86%e3%82%bd%e3%83%aa%e3%83%a5%e3%83%bc%e3%82%b7%e3%83%a7%e3%83%b3%e3%81%ab%e8%bb%a2%e9%80%81%e5%8f%af%e8%83%bd%e3%81%a7%e3%81%99%e3%80%82%0a%e5%85%88%e7%a8%8b%e3%81%ae%e9%80%9a%e7%9f%a5%e3%81%ae%e3%81%a8%e3%81%93%e3%82%8d%e3%81%a7%e3%83%a1%e3%83%bc%e3%83%ab%e3%81%ae%e3%81%bf%e3%81%a8%e6%9b%b8%e3%81%8d%e3%81%be%e3%81%97%e3%81%9f%e3%81%8c%e3%80%81%e4%bb%96%e3%81%ae%e3%83%ad%e3%82%b0%e7%ae%a1%e7%90%86%e3%82%bd%e3%83%aa%e3%83%a5%e3%83%bc%e3%82%b7%e3%83%a7%e3%83%b3%e3%81%ab%e8%bb%a2%e9%80%81%e3%81%a7%e3%81%8d%e3%82%8c%e3%81%b0%e3%81%82%e3%81%a8%e3%81%af%e5%a4%a7%e4%bd%93%e3%82%84%e3%82%8a%e3%81%9f%e3%81%84%e6%94%be%e9%a1%8c%e3%81%a7%e3%81%99%e3%81%ad%ef%bc%81%0adbt%e9%80%a3%e6%90%ba%20%e3%81%be%e3%81%a0%e3%83%99%e3%83%bc%e3%82%bf%e3%81%a7%e3%81%99%e3%81%8c%e5%80%8b%e4%ba%ba%e7%9a%84%e3%81%ab%e3%81%af%e7%b5%90%e6%a7%8b%e8%89%af%e3%81%84%e6%84%9f%e8%a7%a6%e3%82%92%e6%8c%81%e3%81%a1%e3%81%be%e3%81%97%e3%81%9f%e3%80%82%0a%e7%89%b9%e3%81%ab%e3%81%a9%e3%81%a1%e3%82%89%e3%82%82%e6%af%94%e8%bc%83%e7%9a%84%e4%be%a1%e6%a0%bc%e3%81%af%e5%ae%89%e3%81%84%e3%82%bd%e3%83%aa%e3%83%a5%e3%83%bc%e3%82%b7%e3%83%a7%e3%83%b3%e3%81%a7%e3%81%82%e3%82%8a%e3%81%a4%e3%81%a4%e3%80%81%e3%82%a4%e3%83%b3%e3%83%95%e3%83%a9%e3%82%92%e6%84%8f%e8%ad%98%e3%81%97%e3%81%aa%e3%81%84%e3%81%ae%e3%81%a7%e6%9c%80%e5%b0%91%e4%ba%ba%e6%95%b0%e3%81%a7%e5%88%86%e6%9e%90%e5%9f%ba%e7%9b%a4%e3%82%92%e4%bd%9c%e3%81%a3%e3%81%a6%e3%81%84%e3%81%8f%e3%81%bf%e3%81%9f%e3%81%84%e3%81%aa%e3%81%a8%e3%81%93%e3%82%8d%e3%81%a7%e3%81%af%e7%b5%90%e6%a7%8b%e8%89%af%e3%81%95%e3%81%9d%e3%81%86%e3%81%a7%e3%81%99%e3%80%82%0a%e4%bb%8a%e5%9b%9e%e3%81%af%e3%82%aa%e3%83%bc%e3%83%97%e3%83%b3%e3%83%87%e3%83%bc%e3%82%bf%e3%81%8b%e3%82%89%e7%a8%b2%e4%bd%9c%e3%81%ab%e9%96%a2%e3%81%99%e3%82%8b%e3%83%87%e3%83%bc%e3%82%bf%e3%81%a8%e5%a4%a9%e6%b0%97%e6%83%85%e5%a0%b1%e3%82%92%e6%8c%81%e3%81%a3%e3%81%a6%e3%81%8d%e3%81%a6%e3%82%b4%e3%83%8b%e3%83%a7%e3%82%8d%e3%81%86%e3%81%a8%e3%81%99%e3%82%8b%e3%80%81%e3%81%bf%e3%81%9f%e3%81%84%e3%81%aa%e3%83%87%e3%83%a2%e3%82%92%e4%bd%9c%e3%81%a3%e3%81%a6%e3%81%bf%e3%81%be%e3%81%97%e3%81%9f%e3%80%82%0a%e7%94%9f%e3%83%87%e3%83%bc%e3%82%bf%e3%82%92lake%e3%81%ab%e3%81%84%e3%82%8c%e3%80%81%e5%b0%91%e3%81%97%e5%8a%a0%e5%b7%a5%e3%81%97%e3%81%9f%e3%82%82%e3%81%ae%e3%82%92warehouse%e3%80%81%e5%88%86%e6%9e%90%e3%81%ab%e4%bd%bf%e3%81%86%e6%ae%b5%e3%82%92mart%e3%81%a8%e3%82%8f%e3%81%91%e3%81%a6%e3%81%be%e3%81%99%e3%80%82%0afivetran%e5%86%85%e3%81%ae%e8%bb%a2%e9%80%81%e3%82%bf%e3%82%b9%e3%82%af%e3%81%ab%e5%90%88%e3%82%8f%e3%81%9b%e3%81%a6%e5%ae%9f%e8%a1%8c%e3%81%8c%e3%81%a7%e3%81%8d%e3%81%a6%e3%83%af%e3%83%bc%e3%82%af%e3%83%95%e3%83%ad%e3%83%bc%e3%81%8c%e4%b8%80%e5%ae%9a%e4%b8%8d%e8%a6%81%20%e4%b8%8a%e6%b5%81%e3%81%ae%e3%82%b3%e3%83%8d%e3%82%af%e3%82%bf%e3%81%ae%e5%ae%9f%e8%a1%8c%e3%81%ab%e5%90%88%e3%82%8f%e3%81%9b%e3%81%a6%e5%8b%9d%e6%89%8b%e3%81%ab%e5%be%8c%e7%b6%9a%e3%81%aedbt%e3%81%ae%e3%82%bf%e3%82%b9%e3%82%af%e3%82%92%e6%b5%81%e3%81%99%e3%81%93%e3%81%a8%e3%81%8c%e3%81%a7%e3%81%8d%e3%81%be%e3%81%99%e3%80%82%20%e3%81%a4%e3%81%be%e3%82%8a%e3%80%81%e5%87%9d%e3%81%a3%e3%81%9f%e3%81%93%e3%81%a8%e3%82%92%e3%81%97%e3%81%aa%e3%81%91%e3%82%8c%e3%81%b0%e3%83%af%e3%83%bc%e3%82%af%e3%83%95%e3%83%ad%e3%83%bc%e3%81%ae%e7%ae%a1%e7%90%86%e3%81%8c%e4%b8%8d%e8%a6%81%e3%81%a8%e3%81%84%e3%81%86%e3%81%93%e3%81%a8%e3%81%a7%e3%81%99%e3%81%ad%e3%80%82%e6%a5%bd%e3%82%84%e3%83%bb%e3%83%bb%e3%83%bb%0a%e3%82%82%e3%81%a1%e3%82%8d%e3%82%93%e3%80%81%e5%bf%85%e8%a6%81%e3%81%ab%e5%bf%9c%e3%81%98%e3%81%a6%e3%82%b9%e3%82%b1%e3%82%b8%e3%83%a5%e3%83%bc%e3%83%ab%e3%81%ae%e8%a8%ad%e5%ae%9a%e3%82%82%e3%81%a7%e3%81%8d%e3%81%be%e3%81%99%e3%80%82%0a%e3%83%aa%e3%83%8d%e3%83%bc%e3%82%b8%e3%83%a5%e3%81%8c%e3%82%bd%e3%83%bc%e3%82%b9%e3%81%8b%e3%82%89dbt%e5%86%85%e3%81%be%e3%81%a7%e8%bf%bd%e3%81%88%e3%82%8b%20%e3%81%93%e3%82%93%e3%81%aa%e6%84%9f%e3%81%98%e3%81%a7%e3%82%bd%e3%83%bc%e3%82%b9%e3%81%8b%e3%82%89mart%e3%81%be%e3%81%a7%e3%81%84%e3%81%84%e6%84%9f%e3%81%98%e3%81%ab%e5%8f%af%e8%a6%96%e5%8c%96%e3%81%a7%e3%81%8d%e3%81%be%e3%81%97%e3%81%9f%e3%80%82%0aine%e3%81%8c%e7%a8%b2%e4%bd%9c%e3%83%87%e3%83%bc%e3%82%bf%e3%81%a7%e3%81%99%e3%81%8c%e3%80%81%e9%9d%a2%e5%80%92%e3%81%ab%e3%81%aa%e3%81%a3%e3%81%9f%e3%81%ae%e3%81%a7warehouse%e9%83%a8%e5%88%86%e3%81%af%e3%81%99%e3%81%a3%e9%a3%9b%e3%81%b0%e3%81%97%e3%81%a6%e3%82%8b%e3%81%ae%e3%81%af%e3%81%94%e6%84%9b%e5%ac%8c%e3%80%82%0afivetran%e5%86%85%e3%81%a7%e5%85%a8%e4%bd%93%e3%81%ae%e3%83%aa%e3%83%8d%e3%83%bc%e3%82%b8%e3%83%a5%e3%81%8c%e5%87%ba%e3%81%a6%e3%81%8f%e3%82%8b%e3%81%ae%e3%81%a7%e8%89%af%e3%81%84%e3%81%a7%e3%81%99%e3%81%ad%e3%80%82%0adbt%e3%81%ae%e3%83%ad%e3%82%b0%e3%82%82%e3%81%a1%e3%82%83%e3%82%93%e3%81%a8%e6%8b%be%e3%81%88%e3%82%8b%20%28%e8%bb%a2%e9%80%81%e8%a8%ad%e5%ae%9a%e3%81%ae%e4%b8%8a%e3%81%a7%29cloudlogging%e4%b8%8a%e3%81%a7%e7%a2%ba%e8%aa%8d%e3%81%97%e3%81%9f%e3%81%ae%e3%81%a7%e3%81%99%e3%81%8c%e3%80%81%e4%be%8b%e3%81%88%e3%81%b0%e6%88%90%e5%8a%9f%e6%99%82%e3%81%ae%e3%83%ad%e3%82%b0%e3%81%af%e4%bb%a5%e4%b8%8b%e3%81%ae%e3%82%88%e3%81%86%e3%81%abjson%e3%81%a7%e6%a7%8b%e9%80%a0%e5%8c%96%e3%81%95%e3%82%8c%e3%81%a6cloudloggin%e3%81%8b%e3%82%89%e7%a2%ba%e8%aa%8d%e3%81%a7%e3%81%8d%e3%81%be%e3%81%99%e3%80%82%0a%e3%81%a1%e3%82%83%e3%82%93%e3%81%a8%e6%a7%8b%e9%80%a0%e5%8c%96%e3%81%95%e3%82%8c%e3%81%a6%e3%81%84%e3%82%8b%e3%81%ae%e3%81%a7%e3%80%81%e3%82%b5%e3%82%af%e3%83%83%e3%81%a8%e3%83%a1%e3%83%88%e3%83%aa%e3%83%83%e3%82%af%e3%82%92%e4%bd%9c%e3%81%a3%e3%81%9f%e3%82%8a%e9%80%9a%e7%9f%a5%e3%81%99%e3%82%8b%e3%81%ae%e3%82%82%e3%82%84%e3%82%8a%e3%82%84%e3%81%99%e3%81%9d%e3%81%86%e3%81%ab%e8%a6%8b%e3%81%88%e3%81%be%e3%81%99%e3%80%82%0a%7b%20%26quot%3binsertId%26quot%3b%3a%20%26quot%3b9g7n20g1atrvd6%26quot%3b%2c%20%26quot%3bjsonPayload%26quot%3b%3a%20%7b%20%26quot%3bevent%26quot%3b%3a%20%26quot%3bdbt_run_succeeded%26quot%3b%2c%20%26quot%3bcreated%26quot%3b%3a%20%26quot%3b2022-09-10T07%3a14%3a44.435Z%26quot%3b%2c%20%26quot%3bdata%26quot%3b%3a%20%7b%20%26quot%3bstartTime%26quot%3b%3a%20%26quot%3b2022-09-10T07%3a14%3a17.900Z%26quot%3b%2c%20%26quot%3bresult%26quot%3b%3a%20%7b%20%26quot%3bstepResults%26quot%3b%3a%20%5b%20%7b%20%26quot%3bstep%26quot%3b%3a%20%7b%20%26quot%3bprocessBuilderCommand%26quot%3b%3a%20%5b%20%26quot%3bdbt%26quot%3b%2c%20%26quot%3btest%26quot%3b%2c%20%26quot%3b--models%26quot%3b%2c%20%26quot%3b%2bsunshine_time%26quot%3b%2c%20%26quot%3b%2btemperature%26quot%3b%20%5d%2c%20%26quot%3bname%26quot%3b%3a%20%26quot%3bScheduled%3a%20Test%26quot%3b%20%7d%2c%20%26quot%3bfailedModelRuns%26quot%3b%3a%200%2c%20%26quot%3bsuccessfulModelRuns%26quot%3b%3a%200%2c%20%26quot%3bsuccess%26quot%3b%3a%20true%2c%20%26quot%3bcommandResult%26quot%3b%3a%20%7b%20%26quot%3berror%26quot%3b%3a%20%26quot%3b%26quot%3b%2c%20%26quot%3bexitCode%26quot%3b%3a%200%2c%20%26quot%3boutput%26quot%3b%3a%20%26quot%3b07%3a14%3a39%20Running%20with%20dbt%3d1." aria-label="Tumblr">
+      <i class="fab fa-tumblr " aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="https://news.ycombinator.com/submitlink?u=https%3a%2f%2fblog.marufeuille.dev%2fposts%2ffivetran_with_dbt%2f&t=Fivetran%20%e3%82%92%e8%a7%a6%e3%81%a3%e3%81%a6%e3%81%bf%e3%81%a6%e6%80%9d%e3%81%a3%e3%81%9f%e3%81%93%e3%81%a8%e3%81%9f%e3%81%a1" aria-label="Hacker News">
+      <i class="fab fa-hacker-news " aria-hidden="true"></i>
+    </a>
+  </li>
+</ul>
+
+    </div>
+    
+    <div id="toc">
+      <nav id="TableOfContents">
+  <ul>
+    <li><a href="#通知">通知</a></li>
+    <li><a href="#ログの転送">ログの転送</a></li>
+    <li><a href="#dbt連携">dbt連携</a>
+      <ul>
+        <li><a href="#fivetran内の転送タスクに合わせて実行ができてワークフローが一定不要">fivetran内の転送タスクに合わせて実行ができてワークフローが一定不要</a></li>
+        <li><a href="#リネージュがソースからdbt内まで追える">リネージュがソースからdbt内まで追える</a></li>
+        <li><a href="#dbtのログもちゃんと拾える">dbtのログもちゃんと拾える</a></li>
+        <li><a href="#dbtの実行はfivetranが担保してくれる">dbtの実行はfivetranが担保してくれる</a></li>
+      </ul>
+    </li>
+    <li><a href="#まとめ">まとめ</a></li>
+  </ul>
+</nav>
+    </div>
+    
+  </span>
+</div>
+
+
+  <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+    <header>
+      <h1 class="posttitle" itemprop="name headline">
+        Fivetran を触ってみて思ったことたち
+      </h1>
+      <div class="meta">
+        
+        <div class="postdate">
+          
+          <time datetime="2022-09-10 21:00:00 &#43;0900 &#43;0900" itemprop="datePublished">2022-09-10</time>
+          
+        </div>
+        
+        
+        <div class="article-read-time">
+          <i class="far fa-clock"></i>
+          
+          7 minute read
+        </div>
+        
+        
+        
+        <div class="article-tag">
+            <i class="fas fa-tag"></i>
+            
+            
+            <a class="tag-link" href="/tags/fivetran" rel="tag">fivetran</a>
+            
+        </div>
+        
+      </div>
+    </header>
+
+  
+    
+    <div class="content" itemprop="articleBody">
+      <h1 id="はじめに">はじめに</h1>
+<p>前回に引き続きELツールである<a href="https://www.fivetran.com/">Fivetran</a>を試しており、ちょいちょい触って気づいたことを書き留めておきます</p>
+<h1 id="所感">所感</h1>
+<h2 id="通知">通知</h2>
+<p>エラー時の通知などは見た限りはメールのみに対応しています。Slack等には直接は送れなさそうです。この点はUIからだけの操作を考えるとツライかも。</p>
+<p>今どきメールで拾いたいっていうニーズのほうが少なそうだが、逆にライトに使う層だとそれでも良い気がするので、そういうことなのだろうか。</p>
+<h2 id="ログの転送">ログの転送</h2>
+<p>fivetran自体のログはWebUIから確認も可能ですが、Datadog, GCP Cloudloggingのような一般的なログ管理ソリューションに転送可能です。</p>
+<p>先程の通知のところでメールのみと書きましたが、他のログ管理ソリューションに転送できればあとは大体やりたい放題ですね！</p>
+<h2 id="dbt連携">dbt連携</h2>
+<p>まだベータですが個人的には結構良い感触を持ちました。</p>
+<p>特にどちらも比較的価格は安いソリューションでありつつ、インフラを意識しないので最少人数で分析基盤を作っていくみたいなところでは結構良さそうです。</p>
+<p>今回はオープンデータから稲作に関するデータと天気情報を持ってきてゴニョろうとする、みたいなデモを作ってみました。</p>
+<p>生データをlakeにいれ、少し加工したものをwarehouse、分析に使う段をmartとわけてます。</p>
+<h3 id="fivetran内の転送タスクに合わせて実行ができてワークフローが一定不要">fivetran内の転送タスクに合わせて実行ができてワークフローが一定不要</h3>
+<p>上流のコネクタの実行に合わせて勝手に後続のdbtのタスクを流すことができます。
+つまり、凝ったことをしなければワークフローの管理が不要ということですね。楽や・・・</p>
+<p>もちろん、必要に応じてスケジュールの設定もできます。</p>
+<h3 id="リネージュがソースからdbt内まで追える">リネージュがソースからdbt内まで追える</h3>
+<p>こんな感じでソースからmartまでいい感じに可視化できました。</p>
+<p><img src="/images/lineage.png" alt="lineage"></p>
+<p>ineが稲作データですが、面倒になったのでwarehouse部分はすっ飛ばしてるのはご愛嬌。</p>
+<p>fivetran内で全体のリネージュが出てくるので良いですね。</p>
+<h3 id="dbtのログもちゃんと拾える">dbtのログもちゃんと拾える</h3>
+<p>(転送設定の上で)cloudlogging上で確認したのですが、例えば成功時のログは以下のようにjsonで構造化されてcloudlogginから確認できます。</p>
+<p>ちゃんと構造化されているので、サクッとメトリックを作ったり通知するのもやりやすそうに見えます。</p>
+<pre><code>{
+  &quot;insertId&quot;: &quot;9g7n20g1atrvd6&quot;,
+  &quot;jsonPayload&quot;: {
+    &quot;event&quot;: &quot;dbt_run_succeeded&quot;,
+    &quot;created&quot;: &quot;2022-09-10T07:14:44.435Z&quot;,
+    &quot;data&quot;: {
+      &quot;startTime&quot;: &quot;2022-09-10T07:14:17.900Z&quot;,
+      &quot;result&quot;: {
+        &quot;stepResults&quot;: [
+          {
+            &quot;step&quot;: {
+              &quot;processBuilderCommand&quot;: [
+                &quot;dbt&quot;,
+                &quot;test&quot;,
+                &quot;--models&quot;,
+                &quot;+sunshine_time&quot;,
+                &quot;+temperature&quot;
+              ],
+              &quot;name&quot;: &quot;Scheduled: Test&quot;
+            },
+            &quot;failedModelRuns&quot;: 0,
+            &quot;successfulModelRuns&quot;: 0,
+            &quot;success&quot;: true,
+            &quot;commandResult&quot;: {
+              &quot;error&quot;: &quot;&quot;,
+              &quot;exitCode&quot;: 0,
+              &quot;output&quot;: &quot;07:14:39  Running with dbt=1.2.0\n07:14:39  Partial parse save file not found. Starting full parse.\n07:14:40  Found 2 models, 0 tests, 0 snapshots, 0 analyses, 285 macros, 0 operations, 0 seed files, 1 source, 0 exposures, 0 metrics\n07:14:40  \n07:14:40  [WARNING]: Nothing to do. Try checking your model configs and model specification args&quot;
+            },
+            &quot;startTime&quot;: &quot;2022-09-10T07:14:34.035Z&quot;,
+            &quot;endTime&quot;: &quot;2022-09-10T07:14:41.385Z&quot;
+          }
+        ],
+        &quot;description&quot;: &quot;Steps: successful 1, failed 0&quot;
+      },
+      &quot;dbtJobId&quot;: &quot;lyre_stolen&quot;,
+      &quot;dbtJobName&quot;: &quot;TEST_MODELS:sunshine_time_temperature&quot;,
+      &quot;startupDetails&quot;: {
+        &quot;jobId&quot;: 24518629,
+        &quot;type&quot;: &quot;integrated_scheduler&quot;
+      },
+      &quot;endTime&quot;: &quot;2022-09-10T07:14:41.614Z&quot;
+    }
+  },
+  &quot;resource&quot;: {
+    &quot;type&quot;: &quot;service_account&quot;,
+    &quot;labels&quot;: {
+      &quot;unique_id&quot;: &quot;&quot;,
+      &quot;project_id&quot;: &quot;*******&quot;,
+      &quot;email_id&quot;: &quot;g-******@fivetran-production.iam.gserviceaccount.com&quot;
+    }
+  },
+  &quot;timestamp&quot;: &quot;2022-09-10T07:14:44.441Z&quot;,
+  &quot;severity&quot;: &quot;INFO&quot;,
+  &quot;labels&quot;: {
+    &quot;levelValue&quot;: &quot;801&quot;,
+    &quot;levelName&quot;: &quot;INFO&quot;
+  },
+  &quot;logName&quot;: &quot;projects/*******/logs/******-Warehouse-dbt-TEST_MODELS_sunshine_time_temperature&quot;,
+  &quot;receiveTimestamp&quot;: &quot;2022-09-10T07:14:45.364961774Z&quot;
+}
+</code></pre><p>dbt cloudとか使ってると、ログを取り出す方法が多分ない気がする(ちゃんと調べ尽くしてはいない)のでこのあたりもありがたい。。。</p>
+<h3 id="dbtの実行はfivetranが担保してくれる">dbtの実行はfivetranが担保してくれる</h3>
+<p>逆に言うとカスタマイズの部分で苦しむ可能性もあるかもですが、比較的小規模に使いたいケースだととても楽そうに見えます。</p>
+<p>課金は気になる。</p>
+<h2 id="まとめ">まとめ</h2>
+<p>とりあえずこれでいい感あった。</p>
+<p>今後改善してほしいなーという部分として</p>
+<ul>
+<li>dbt連携やログ連携等、terraform管理できない部分がちょっとある</li>
+<li>connectorのスケジュールが更新間隔しか選べない気がする。それでもいいのだが、dbtのスケジュールは時刻指定可能なので思想でもなさそうなのが気になった。</li>
+<li>CSV取り込み時に日本語ヘッダー行があると謎のアルファベットに変換されて何が何だか分からない事になる(マッピングさせてほしい)</li>
+</ul>
+
+    </div>
+  </article>
+
+  
+  
+
+
+
+
+
+
+  <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/posts">Posts</a></li>
+         
+          <li><a href="/tags">Tags</a></li>
+         
+          <li><a href="/about">About</a></li>
+        
+      </ul>
+    </div>
+
+    
+    <div id="toc-footer" style="display: none">
+      <nav id="TableOfContents">
+  <ul>
+    <li><a href="#通知">通知</a></li>
+    <li><a href="#ログの転送">ログの転送</a></li>
+    <li><a href="#dbt連携">dbt連携</a>
+      <ul>
+        <li><a href="#fivetran内の転送タスクに合わせて実行ができてワークフローが一定不要">fivetran内の転送タスクに合わせて実行ができてワークフローが一定不要</a></li>
+        <li><a href="#リネージュがソースからdbt内まで追える">リネージュがソースからdbt内まで追える</a></li>
+        <li><a href="#dbtのログもちゃんと拾える">dbtのログもちゃんと拾える</a></li>
+        <li><a href="#dbtの実行はfivetranが担保してくれる">dbtの実行はfivetranが担保してくれる</a></li>
+      </ul>
+    </li>
+    <li><a href="#まとめ">まとめ</a></li>
+  </ul>
+</nav>
+    </div>
+    
+
+    <div id="share-footer" style="display: none">
+      
+      <ul>
+  
+  
+    
+  
+  
+  <li>
+    <a class="icon" href="http://www.facebook.com/sharer.php?u=https%3a%2f%2fblog.marufeuille.dev%2fposts%2ffivetran_with_dbt%2f" aria-label="Facebook">
+      <i class="fab fa-facebook fa-lg" aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="https://twitter.com/share?url=https%3a%2f%2fblog.marufeuille.dev%2fposts%2ffivetran_with_dbt%2f&text=Fivetran%20%e3%82%92%e8%a7%a6%e3%81%a3%e3%81%a6%e3%81%bf%e3%81%a6%e6%80%9d%e3%81%a3%e3%81%9f%e3%81%93%e3%81%a8%e3%81%9f%e3%81%a1" aria-label="Twitter">
+      <i class="fab fa-twitter fa-lg" aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="http://www.linkedin.com/shareArticle?url=https%3a%2f%2fblog.marufeuille.dev%2fposts%2ffivetran_with_dbt%2f&title=Fivetran%20%e3%82%92%e8%a7%a6%e3%81%a3%e3%81%a6%e3%81%bf%e3%81%a6%e6%80%9d%e3%81%a3%e3%81%9f%e3%81%93%e3%81%a8%e3%81%9f%e3%81%a1" aria-label="Linkedin">
+      <i class="fab fa-linkedin fa-lg" aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=https%3a%2f%2fblog.marufeuille.dev%2fposts%2ffivetran_with_dbt%2f&is_video=false&description=Fivetran%20%e3%82%92%e8%a7%a6%e3%81%a3%e3%81%a6%e3%81%bf%e3%81%a6%e6%80%9d%e3%81%a3%e3%81%9f%e3%81%93%e3%81%a8%e3%81%9f%e3%81%a1" aria-label="Pinterest">
+      <i class="fab fa-pinterest fa-lg" aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="mailto:?subject=Fivetran%20%e3%82%92%e8%a7%a6%e3%81%a3%e3%81%a6%e3%81%bf%e3%81%a6%e6%80%9d%e3%81%a3%e3%81%9f%e3%81%93%e3%81%a8%e3%81%9f%e3%81%a1&body=Check out this article: https%3a%2f%2fblog.marufeuille.dev%2fposts%2ffivetran_with_dbt%2f" aria-label="Email">
+      <i class="fas fa-envelope fa-lg" aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="https://getpocket.com/save?url=https%3a%2f%2fblog.marufeuille.dev%2fposts%2ffivetran_with_dbt%2f&title=Fivetran%20%e3%82%92%e8%a7%a6%e3%81%a3%e3%81%a6%e3%81%bf%e3%81%a6%e6%80%9d%e3%81%a3%e3%81%9f%e3%81%93%e3%81%a8%e3%81%9f%e3%81%a1" aria-label="Pocket">
+      <i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="http://reddit.com/submit?url=https%3a%2f%2fblog.marufeuille.dev%2fposts%2ffivetran_with_dbt%2f&title=Fivetran%20%e3%82%92%e8%a7%a6%e3%81%a3%e3%81%a6%e3%81%bf%e3%81%a6%e6%80%9d%e3%81%a3%e3%81%9f%e3%81%93%e3%81%a8%e3%81%9f%e3%81%a1" aria-label="reddit">
+      <i class="fab fa-reddit fa-lg" aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="http://www.tumblr.com/share/link?url=https%3a%2f%2fblog.marufeuille.dev%2fposts%2ffivetran_with_dbt%2f&name=Fivetran%20%e3%82%92%e8%a7%a6%e3%81%a3%e3%81%a6%e3%81%bf%e3%81%a6%e6%80%9d%e3%81%a3%e3%81%9f%e3%81%93%e3%81%a8%e3%81%9f%e3%81%a1&description=%e3%81%af%e3%81%98%e3%82%81%e3%81%ab%20%e5%89%8d%e5%9b%9e%e3%81%ab%e5%bc%95%e3%81%8d%e7%b6%9a%e3%81%8dEL%e3%83%84%e3%83%bc%e3%83%ab%e3%81%a7%e3%81%82%e3%82%8bFivetran%e3%82%92%e8%a9%a6%e3%81%97%e3%81%a6%e3%81%8a%e3%82%8a%e3%80%81%e3%81%a1%e3%82%87%e3%81%84%e3%81%a1%e3%82%87%e3%81%84%e8%a7%a6%e3%81%a3%e3%81%a6%e6%b0%97%e3%81%a5%e3%81%84%e3%81%9f%e3%81%93%e3%81%a8%e3%82%92%e6%9b%b8%e3%81%8d%e7%95%99%e3%82%81%e3%81%a6%e3%81%8a%e3%81%8d%e3%81%be%e3%81%99%0a%e6%89%80%e6%84%9f%20%e9%80%9a%e7%9f%a5%20%e3%82%a8%e3%83%a9%e3%83%bc%e6%99%82%e3%81%ae%e9%80%9a%e7%9f%a5%e3%81%aa%e3%81%a9%e3%81%af%e8%a6%8b%e3%81%9f%e9%99%90%e3%82%8a%e3%81%af%e3%83%a1%e3%83%bc%e3%83%ab%e3%81%ae%e3%81%bf%e3%81%ab%e5%af%be%e5%bf%9c%e3%81%97%e3%81%a6%e3%81%84%e3%81%be%e3%81%99%e3%80%82Slack%e7%ad%89%e3%81%ab%e3%81%af%e7%9b%b4%e6%8e%a5%e3%81%af%e9%80%81%e3%82%8c%e3%81%aa%e3%81%95%e3%81%9d%e3%81%86%e3%81%a7%e3%81%99%e3%80%82%e3%81%93%e3%81%ae%e7%82%b9%e3%81%afUI%e3%81%8b%e3%82%89%e3%81%a0%e3%81%91%e3%81%ae%e6%93%8d%e4%bd%9c%e3%82%92%e8%80%83%e3%81%88%e3%82%8b%e3%81%a8%e3%83%84%e3%83%a9%e3%82%a4%e3%81%8b%e3%82%82%e3%80%82%0a%e4%bb%8a%e3%81%a9%e3%81%8d%e3%83%a1%e3%83%bc%e3%83%ab%e3%81%a7%e6%8b%be%e3%81%84%e3%81%9f%e3%81%84%e3%81%a3%e3%81%a6%e3%81%84%e3%81%86%e3%83%8b%e3%83%bc%e3%82%ba%e3%81%ae%e3%81%bb%e3%81%86%e3%81%8c%e5%b0%91%e3%81%aa%e3%81%9d%e3%81%86%e3%81%a0%e3%81%8c%e3%80%81%e9%80%86%e3%81%ab%e3%83%a9%e3%82%a4%e3%83%88%e3%81%ab%e4%bd%bf%e3%81%86%e5%b1%a4%e3%81%a0%e3%81%a8%e3%81%9d%e3%82%8c%e3%81%a7%e3%82%82%e8%89%af%e3%81%84%e6%b0%97%e3%81%8c%e3%81%99%e3%82%8b%e3%81%ae%e3%81%a7%e3%80%81%e3%81%9d%e3%81%86%e3%81%84%e3%81%86%e3%81%93%e3%81%a8%e3%81%aa%e3%81%ae%e3%81%a0%e3%82%8d%e3%81%86%e3%81%8b%e3%80%82%0a%e3%83%ad%e3%82%b0%e3%81%ae%e8%bb%a2%e9%80%81%20fivetran%e8%87%aa%e4%bd%93%e3%81%ae%e3%83%ad%e3%82%b0%e3%81%afWebUI%e3%81%8b%e3%82%89%e7%a2%ba%e8%aa%8d%e3%82%82%e5%8f%af%e8%83%bd%e3%81%a7%e3%81%99%e3%81%8c%e3%80%81Datadog%2c%20GCP%20Cloudlogging%e3%81%ae%e3%82%88%e3%81%86%e3%81%aa%e4%b8%80%e8%88%ac%e7%9a%84%e3%81%aa%e3%83%ad%e3%82%b0%e7%ae%a1%e7%90%86%e3%82%bd%e3%83%aa%e3%83%a5%e3%83%bc%e3%82%b7%e3%83%a7%e3%83%b3%e3%81%ab%e8%bb%a2%e9%80%81%e5%8f%af%e8%83%bd%e3%81%a7%e3%81%99%e3%80%82%0a%e5%85%88%e7%a8%8b%e3%81%ae%e9%80%9a%e7%9f%a5%e3%81%ae%e3%81%a8%e3%81%93%e3%82%8d%e3%81%a7%e3%83%a1%e3%83%bc%e3%83%ab%e3%81%ae%e3%81%bf%e3%81%a8%e6%9b%b8%e3%81%8d%e3%81%be%e3%81%97%e3%81%9f%e3%81%8c%e3%80%81%e4%bb%96%e3%81%ae%e3%83%ad%e3%82%b0%e7%ae%a1%e7%90%86%e3%82%bd%e3%83%aa%e3%83%a5%e3%83%bc%e3%82%b7%e3%83%a7%e3%83%b3%e3%81%ab%e8%bb%a2%e9%80%81%e3%81%a7%e3%81%8d%e3%82%8c%e3%81%b0%e3%81%82%e3%81%a8%e3%81%af%e5%a4%a7%e4%bd%93%e3%82%84%e3%82%8a%e3%81%9f%e3%81%84%e6%94%be%e9%a1%8c%e3%81%a7%e3%81%99%e3%81%ad%ef%bc%81%0adbt%e9%80%a3%e6%90%ba%20%e3%81%be%e3%81%a0%e3%83%99%e3%83%bc%e3%82%bf%e3%81%a7%e3%81%99%e3%81%8c%e5%80%8b%e4%ba%ba%e7%9a%84%e3%81%ab%e3%81%af%e7%b5%90%e6%a7%8b%e8%89%af%e3%81%84%e6%84%9f%e8%a7%a6%e3%82%92%e6%8c%81%e3%81%a1%e3%81%be%e3%81%97%e3%81%9f%e3%80%82%0a%e7%89%b9%e3%81%ab%e3%81%a9%e3%81%a1%e3%82%89%e3%82%82%e6%af%94%e8%bc%83%e7%9a%84%e4%be%a1%e6%a0%bc%e3%81%af%e5%ae%89%e3%81%84%e3%82%bd%e3%83%aa%e3%83%a5%e3%83%bc%e3%82%b7%e3%83%a7%e3%83%b3%e3%81%a7%e3%81%82%e3%82%8a%e3%81%a4%e3%81%a4%e3%80%81%e3%82%a4%e3%83%b3%e3%83%95%e3%83%a9%e3%82%92%e6%84%8f%e8%ad%98%e3%81%97%e3%81%aa%e3%81%84%e3%81%ae%e3%81%a7%e6%9c%80%e5%b0%91%e4%ba%ba%e6%95%b0%e3%81%a7%e5%88%86%e6%9e%90%e5%9f%ba%e7%9b%a4%e3%82%92%e4%bd%9c%e3%81%a3%e3%81%a6%e3%81%84%e3%81%8f%e3%81%bf%e3%81%9f%e3%81%84%e3%81%aa%e3%81%a8%e3%81%93%e3%82%8d%e3%81%a7%e3%81%af%e7%b5%90%e6%a7%8b%e8%89%af%e3%81%95%e3%81%9d%e3%81%86%e3%81%a7%e3%81%99%e3%80%82%0a%e4%bb%8a%e5%9b%9e%e3%81%af%e3%82%aa%e3%83%bc%e3%83%97%e3%83%b3%e3%83%87%e3%83%bc%e3%82%bf%e3%81%8b%e3%82%89%e7%a8%b2%e4%bd%9c%e3%81%ab%e9%96%a2%e3%81%99%e3%82%8b%e3%83%87%e3%83%bc%e3%82%bf%e3%81%a8%e5%a4%a9%e6%b0%97%e6%83%85%e5%a0%b1%e3%82%92%e6%8c%81%e3%81%a3%e3%81%a6%e3%81%8d%e3%81%a6%e3%82%b4%e3%83%8b%e3%83%a7%e3%82%8d%e3%81%86%e3%81%a8%e3%81%99%e3%82%8b%e3%80%81%e3%81%bf%e3%81%9f%e3%81%84%e3%81%aa%e3%83%87%e3%83%a2%e3%82%92%e4%bd%9c%e3%81%a3%e3%81%a6%e3%81%bf%e3%81%be%e3%81%97%e3%81%9f%e3%80%82%0a%e7%94%9f%e3%83%87%e3%83%bc%e3%82%bf%e3%82%92lake%e3%81%ab%e3%81%84%e3%82%8c%e3%80%81%e5%b0%91%e3%81%97%e5%8a%a0%e5%b7%a5%e3%81%97%e3%81%9f%e3%82%82%e3%81%ae%e3%82%92warehouse%e3%80%81%e5%88%86%e6%9e%90%e3%81%ab%e4%bd%bf%e3%81%86%e6%ae%b5%e3%82%92mart%e3%81%a8%e3%82%8f%e3%81%91%e3%81%a6%e3%81%be%e3%81%99%e3%80%82%0afivetran%e5%86%85%e3%81%ae%e8%bb%a2%e9%80%81%e3%82%bf%e3%82%b9%e3%82%af%e3%81%ab%e5%90%88%e3%82%8f%e3%81%9b%e3%81%a6%e5%ae%9f%e8%a1%8c%e3%81%8c%e3%81%a7%e3%81%8d%e3%81%a6%e3%83%af%e3%83%bc%e3%82%af%e3%83%95%e3%83%ad%e3%83%bc%e3%81%8c%e4%b8%80%e5%ae%9a%e4%b8%8d%e8%a6%81%20%e4%b8%8a%e6%b5%81%e3%81%ae%e3%82%b3%e3%83%8d%e3%82%af%e3%82%bf%e3%81%ae%e5%ae%9f%e8%a1%8c%e3%81%ab%e5%90%88%e3%82%8f%e3%81%9b%e3%81%a6%e5%8b%9d%e6%89%8b%e3%81%ab%e5%be%8c%e7%b6%9a%e3%81%aedbt%e3%81%ae%e3%82%bf%e3%82%b9%e3%82%af%e3%82%92%e6%b5%81%e3%81%99%e3%81%93%e3%81%a8%e3%81%8c%e3%81%a7%e3%81%8d%e3%81%be%e3%81%99%e3%80%82%20%e3%81%a4%e3%81%be%e3%82%8a%e3%80%81%e5%87%9d%e3%81%a3%e3%81%9f%e3%81%93%e3%81%a8%e3%82%92%e3%81%97%e3%81%aa%e3%81%91%e3%82%8c%e3%81%b0%e3%83%af%e3%83%bc%e3%82%af%e3%83%95%e3%83%ad%e3%83%bc%e3%81%ae%e7%ae%a1%e7%90%86%e3%81%8c%e4%b8%8d%e8%a6%81%e3%81%a8%e3%81%84%e3%81%86%e3%81%93%e3%81%a8%e3%81%a7%e3%81%99%e3%81%ad%e3%80%82%e6%a5%bd%e3%82%84%e3%83%bb%e3%83%bb%e3%83%bb%0a%e3%82%82%e3%81%a1%e3%82%8d%e3%82%93%e3%80%81%e5%bf%85%e8%a6%81%e3%81%ab%e5%bf%9c%e3%81%98%e3%81%a6%e3%82%b9%e3%82%b1%e3%82%b8%e3%83%a5%e3%83%bc%e3%83%ab%e3%81%ae%e8%a8%ad%e5%ae%9a%e3%82%82%e3%81%a7%e3%81%8d%e3%81%be%e3%81%99%e3%80%82%0a%e3%83%aa%e3%83%8d%e3%83%bc%e3%82%b8%e3%83%a5%e3%81%8c%e3%82%bd%e3%83%bc%e3%82%b9%e3%81%8b%e3%82%89dbt%e5%86%85%e3%81%be%e3%81%a7%e8%bf%bd%e3%81%88%e3%82%8b%20%e3%81%93%e3%82%93%e3%81%aa%e6%84%9f%e3%81%98%e3%81%a7%e3%82%bd%e3%83%bc%e3%82%b9%e3%81%8b%e3%82%89mart%e3%81%be%e3%81%a7%e3%81%84%e3%81%84%e6%84%9f%e3%81%98%e3%81%ab%e5%8f%af%e8%a6%96%e5%8c%96%e3%81%a7%e3%81%8d%e3%81%be%e3%81%97%e3%81%9f%e3%80%82%0aine%e3%81%8c%e7%a8%b2%e4%bd%9c%e3%83%87%e3%83%bc%e3%82%bf%e3%81%a7%e3%81%99%e3%81%8c%e3%80%81%e9%9d%a2%e5%80%92%e3%81%ab%e3%81%aa%e3%81%a3%e3%81%9f%e3%81%ae%e3%81%a7warehouse%e9%83%a8%e5%88%86%e3%81%af%e3%81%99%e3%81%a3%e9%a3%9b%e3%81%b0%e3%81%97%e3%81%a6%e3%82%8b%e3%81%ae%e3%81%af%e3%81%94%e6%84%9b%e5%ac%8c%e3%80%82%0afivetran%e5%86%85%e3%81%a7%e5%85%a8%e4%bd%93%e3%81%ae%e3%83%aa%e3%83%8d%e3%83%bc%e3%82%b8%e3%83%a5%e3%81%8c%e5%87%ba%e3%81%a6%e3%81%8f%e3%82%8b%e3%81%ae%e3%81%a7%e8%89%af%e3%81%84%e3%81%a7%e3%81%99%e3%81%ad%e3%80%82%0adbt%e3%81%ae%e3%83%ad%e3%82%b0%e3%82%82%e3%81%a1%e3%82%83%e3%82%93%e3%81%a8%e6%8b%be%e3%81%88%e3%82%8b%20%28%e8%bb%a2%e9%80%81%e8%a8%ad%e5%ae%9a%e3%81%ae%e4%b8%8a%e3%81%a7%29cloudlogging%e4%b8%8a%e3%81%a7%e7%a2%ba%e8%aa%8d%e3%81%97%e3%81%9f%e3%81%ae%e3%81%a7%e3%81%99%e3%81%8c%e3%80%81%e4%be%8b%e3%81%88%e3%81%b0%e6%88%90%e5%8a%9f%e6%99%82%e3%81%ae%e3%83%ad%e3%82%b0%e3%81%af%e4%bb%a5%e4%b8%8b%e3%81%ae%e3%82%88%e3%81%86%e3%81%abjson%e3%81%a7%e6%a7%8b%e9%80%a0%e5%8c%96%e3%81%95%e3%82%8c%e3%81%a6cloudloggin%e3%81%8b%e3%82%89%e7%a2%ba%e8%aa%8d%e3%81%a7%e3%81%8d%e3%81%be%e3%81%99%e3%80%82%0a%e3%81%a1%e3%82%83%e3%82%93%e3%81%a8%e6%a7%8b%e9%80%a0%e5%8c%96%e3%81%95%e3%82%8c%e3%81%a6%e3%81%84%e3%82%8b%e3%81%ae%e3%81%a7%e3%80%81%e3%82%b5%e3%82%af%e3%83%83%e3%81%a8%e3%83%a1%e3%83%88%e3%83%aa%e3%83%83%e3%82%af%e3%82%92%e4%bd%9c%e3%81%a3%e3%81%9f%e3%82%8a%e9%80%9a%e7%9f%a5%e3%81%99%e3%82%8b%e3%81%ae%e3%82%82%e3%82%84%e3%82%8a%e3%82%84%e3%81%99%e3%81%9d%e3%81%86%e3%81%ab%e8%a6%8b%e3%81%88%e3%81%be%e3%81%99%e3%80%82%0a%7b%20%26quot%3binsertId%26quot%3b%3a%20%26quot%3b9g7n20g1atrvd6%26quot%3b%2c%20%26quot%3bjsonPayload%26quot%3b%3a%20%7b%20%26quot%3bevent%26quot%3b%3a%20%26quot%3bdbt_run_succeeded%26quot%3b%2c%20%26quot%3bcreated%26quot%3b%3a%20%26quot%3b2022-09-10T07%3a14%3a44.435Z%26quot%3b%2c%20%26quot%3bdata%26quot%3b%3a%20%7b%20%26quot%3bstartTime%26quot%3b%3a%20%26quot%3b2022-09-10T07%3a14%3a17.900Z%26quot%3b%2c%20%26quot%3bresult%26quot%3b%3a%20%7b%20%26quot%3bstepResults%26quot%3b%3a%20%5b%20%7b%20%26quot%3bstep%26quot%3b%3a%20%7b%20%26quot%3bprocessBuilderCommand%26quot%3b%3a%20%5b%20%26quot%3bdbt%26quot%3b%2c%20%26quot%3btest%26quot%3b%2c%20%26quot%3b--models%26quot%3b%2c%20%26quot%3b%2bsunshine_time%26quot%3b%2c%20%26quot%3b%2btemperature%26quot%3b%20%5d%2c%20%26quot%3bname%26quot%3b%3a%20%26quot%3bScheduled%3a%20Test%26quot%3b%20%7d%2c%20%26quot%3bfailedModelRuns%26quot%3b%3a%200%2c%20%26quot%3bsuccessfulModelRuns%26quot%3b%3a%200%2c%20%26quot%3bsuccess%26quot%3b%3a%20true%2c%20%26quot%3bcommandResult%26quot%3b%3a%20%7b%20%26quot%3berror%26quot%3b%3a%20%26quot%3b%26quot%3b%2c%20%26quot%3bexitCode%26quot%3b%3a%200%2c%20%26quot%3boutput%26quot%3b%3a%20%26quot%3b07%3a14%3a39%20Running%20with%20dbt%3d1." aria-label="Tumblr">
+      <i class="fab fa-tumblr fa-lg" aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="https://news.ycombinator.com/submitlink?u=https%3a%2f%2fblog.marufeuille.dev%2fposts%2ffivetran_with_dbt%2f&t=Fivetran%20%e3%82%92%e8%a7%a6%e3%81%a3%e3%81%a6%e3%81%bf%e3%81%a6%e6%80%9d%e3%81%a3%e3%81%9f%e3%81%93%e3%81%a8%e3%81%9f%e3%81%a1" aria-label="Hacker News">
+      <i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i>
+    </a>
+  </li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+      
+        <a id="menu-toggle" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;" aria-label="Menu">
+          <i class="fas fa-bars fa-lg" aria-hidden="true"></i> Menu</a>
+        
+        <a id="toc-toggle" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;" aria-label="TOC">
+          <i class="fas fa-list fa-lg" aria-hidden="true"></i> TOC</a>
+        
+        <a id="share-toggle" class="icon" href="#" onclick="$('#share-footer').toggle();return false;" aria-label="Share">
+          <i class="fas fa-share-alt fa-lg" aria-hidden="true"></i> share</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" aria-label="Top of Page">
+          <i class="fas fa-chevron-up fa-lg" aria-hidden="true"></i> Top</a>
+    </div>
+
+  </div>
+</div>
+
+
+  <footer id="footer">
+  <div class="footer-left">
+    Copyright  &copy; 2022  marufeuille 
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+         
+        <li><a href="/">Home</a></li>
+         
+        <li><a href="/posts">Posts</a></li>
+         
+        <li><a href="/tags">Tags</a></li>
+         
+        <li><a href="/about">About</a></li>
+        
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+
+  </div>
+</body>
+
+<link rel="stylesheet" href=/lib/font-awesome/css/all.min.css>
+<script src=/lib/jquery/jquery.min.js></script>
+<script src=/js/main.js></script>
+
+<script src=/js/code-copy.js></script>
+
+
+
+
+</html>
