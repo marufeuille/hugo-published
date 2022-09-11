@@ -243,11 +243,11 @@ dbtのログさえちゃんと構造化されているので、サクッとメ�
 <p>fivetran側でconnector/destinationの設定をして、githubにdbtのコードをアップロード、fivetran側で連携の設定を入れればあとは簡単に動作するようになります。</p>
 <p>dbtを連携させるとこんな感じでソースからmartまでいい感じに可視化できました。
 (文字等はあとから書き込んでいます)</p>
-<p><img src="/images/lineage.png" alt="lineage"></p>
+<p><img src="/images/fivetran/lineage.png" alt="lineage"></p>
 <p>手軽に使えるのはとても良いですね。</p>
 <h3 id="ログについて">ログについて</h3>
 <p>ログは以下のようにWeb UI上から確認できます。</p>
-<p><img src="/images/logs.png" alt="logs"></p>
+<p><img src="/images/fivetran/logs.png" alt="logs"></p>
 <p>また、ログの転送設定も可能で、例えば成功時のログは以下のようにjsonで構造化されてcloudlogginから確認できます。</p>
 <p>dbtのログさえちゃんと構造化されているので、サクッとメトリックを作ったり通知するのもやりやすそうに見えます。</p>
 <pre><code>{
@@ -311,6 +311,7 @@ dbtのログさえちゃんと構造化されているので、サクッとメ�
   &quot;receiveTimestamp&quot;: &quot;2022-09-10T07:14:45.364961774Z&quot;
 }
 </code></pre><p>このあたりは大変ありがたい。。。</p>
+<p>ちなみにエラー通知はメールのみっぽいので、Slack通知が欲しかったらこのへんでうまくやることになりそうです。</p>
 <h2 id="まとめ">まとめ</h2>
 <p>とりあえずELツールとしては十分そうでした。</p>
 <p>また、dbtの連携はベータながら今後が楽しみになる感じでした。料金とかどうなるんだろう。</p>
